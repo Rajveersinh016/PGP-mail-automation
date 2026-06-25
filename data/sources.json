@@ -1,0 +1,262 @@
+[
+  {
+    "name": "Glass International",
+    "category": "Global Container Glass Industry Sources",
+    "tier": 2,
+    "priority_type": "industry_magazine",
+    "reliability_score": 90,
+    "scraping_method": "html",
+    "web_url": "https://www.glass-international.com/news",
+    "rss_url": null,
+    "scraping_config": {
+      "selector": "article, div.article, div.news-article",
+      "verify_ssl": true
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "Glass Online",
+    "category": "Global Container Glass Industry Sources",
+    "tier": 2,
+    "priority_type": "industry_magazine",
+    "reliability_score": 90,
+    "scraping_method": "html",
+    "web_url": "https://www.glassonline.com/news/",
+    "rss_url": null,
+    "scraping_config": {
+      "selector": "article, div.post, .entry-title a",
+      "verify_ssl": true
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "Glass Worldwide",
+    "category": "Global Container Glass Industry Sources",
+    "tier": 2,
+    "priority_type": "industry_magazine",
+    "reliability_score": 85,
+    "scraping_method": "html",
+    "web_url": "https://www.glassworldwide.co.uk/news",
+    "rss_url": null,
+    "scraping_config": {
+      "selector": "article, div.news, h2 a, h3 a",
+      "verify_ssl": false
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "Glass Bulletin - Industry News",
+    "category": "Global Container Glass Industry Sources",
+    "tier": 2,
+    "priority_type": "industry_magazine",
+    "reliability_score": 80,
+    "scraping_method": "html",
+    "web_url": "https://www.glassbulletin.com/glass-industry-news",
+    "rss_url": null,
+    "scraping_config": {
+      "selector": "article, h2 a, h3 a, div.news-item",
+      "verify_ssl": true
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "Glass Bulletin - Company News",
+    "category": "Global Container Glass Industry Sources",
+    "tier": 2,
+    "priority_type": "industry_magazine",
+    "reliability_score": 80,
+    "scraping_method": "html",
+    "web_url": "https://www.glassbulletin.com/company-news",
+    "rss_url": null,
+    "scraping_config": {
+      "selector": "article, h2 a, h3 a, div.news-item",
+      "verify_ssl": true
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "Glass Global",
+    "category": "Global Container Glass Industry Sources",
+    "tier": 2,
+    "priority_type": "industry_magazine",
+    "reliability_score": 85,
+    "scraping_method": "html",
+    "web_url": "https://www.glassglobal.com/news",
+    "rss_url": null,
+    "scraping_config": {
+      "selector": "a[href*='/news/']",
+      "verify_ssl": true
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "PIB - Press Information Bureau",
+    "category": "Government & Regulatory Sources",
+    "tier": 4,
+    "priority_type": "government_source",
+    "reliability_score": 95,
+    "scraping_method": "rss",
+    "web_url": "https://pib.gov.in",
+    "rss_url": "https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3",
+    "scraping_config": {
+      "verify_ssl": true
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "Watchlist Companies - Google News Monitoring",
+    "category": "Watchlist",
+    "tier": 1,
+    "priority_type": "company_website",
+    "reliability_score": 95,
+    "scraping_method": "google_news_watchlist",
+    "web_url": "https://news.google.com",
+    "rss_url": null,
+    "scraping_config": {},
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "Reuters - Container Glass Industry News",
+    "category": "Global Business News",
+    "tier": 3,
+    "priority_type": "business_news",
+    "reliability_score": 95,
+    "scraping_method": "google_news",
+    "web_url": "https://www.reuters.com",
+    "rss_url": null,
+    "scraping_config": {
+      "query": "site:reuters.com \"glass\" AND (\"bottle\" OR \"container\" OR \"packaging\" OR \"furnace\")"
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "Bloomberg - Container Glass News",
+    "category": "Global Business News",
+    "tier": 3,
+    "priority_type": "business_news",
+    "reliability_score": 95,
+    "scraping_method": "google_news",
+    "web_url": "https://www.bloomberg.com",
+    "rss_url": null,
+    "scraping_config": {
+      "query": "site:bloomberg.com \"glass\" AND (\"bottle\" OR \"container\" OR \"packaging\" OR \"furnace\")"
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "BusinessWire - Packaging Industry News",
+    "category": "Global Business News",
+    "tier": 3,
+    "priority_type": "press_release",
+    "reliability_score": 95,
+    "scraping_method": "google_news",
+    "web_url": "https://www.businesswire.com",
+    "rss_url": null,
+    "scraping_config": {
+      "query": "site:businesswire.com \"container glass\" OR \"glass packaging\" OR \"glass bottle\" OR \"Vetropack\" OR \"Verallia\" OR \"Ardagh\" OR \"Gerresheimer\""
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "PR Newswire - Glass Packaging",
+    "category": "Global Business News",
+    "tier": 3,
+    "priority_type": "press_release",
+    "reliability_score": 95,
+    "scraping_method": "google_news",
+    "web_url": "https://www.prnewswire.com",
+    "rss_url": null,
+    "scraping_config": {
+      "query": "site:prnewswire.com \"container glass\" OR \"glass packaging\" OR \"glass bottle\" OR \"O-I Glass\" OR \"Saverglass\" OR \"Stoelzle\""
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "Packaging World - Glass News",
+    "category": "Packaging Industry Sources",
+    "tier": 5,
+    "priority_type": "industry_magazine",
+    "reliability_score": 90,
+    "scraping_method": "google_news",
+    "web_url": "https://www.packworld.com",
+    "rss_url": null,
+    "scraping_config": {
+      "query": "site:packworld.com \"glass bottle\" OR \"glass packaging\" OR \"container glass\""
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "Packaging Europe - Glass News",
+    "category": "Packaging Industry Sources",
+    "tier": 5,
+    "priority_type": "industry_magazine",
+    "reliability_score": 90,
+    "scraping_method": "google_news",
+    "web_url": "https://packagingeurope.com",
+    "rss_url": null,
+    "scraping_config": {
+      "query": "site:packagingeurope.com \"glass\" AND (\"bottle\" OR \"container\" OR \"packaging\" OR \"furnace\")"
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "Spirits Business - Glass Packaging",
+    "category": "Beverage Industry Sources",
+    "tier": 6,
+    "priority_type": "industry_magazine",
+    "reliability_score": 85,
+    "scraping_method": "google_news",
+    "web_url": "https://www.thespiritsbusiness.com",
+    "rss_url": null,
+    "scraping_config": {
+      "query": "site:thespiritsbusiness.com \"bottle\" OR \"packaging\" OR \"glass\""
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  },
+  {
+    "name": "Cosmetics Business - Perfume Packaging",
+    "category": "Cosmetics & Luxury Packaging",
+    "tier": 7,
+    "priority_type": "industry_magazine",
+    "reliability_score": 85,
+    "scraping_method": "google_news",
+    "web_url": "https://www.cosmeticsbusiness.com",
+    "rss_url": null,
+    "scraping_config": {
+      "query": "site:cosmeticsbusiness.com \"perfume bottle\" OR \"glass packaging\" OR \"luxury bottle\""
+    },
+    "last_successful_crawl": null,
+    "average_response_time_ms": 0,
+    "status": "active"
+  }
+]

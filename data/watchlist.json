@@ -1,0 +1,59 @@
+{
+  "container_glass_manufacturers": [
+    "O-I Glass",
+    "Ardagh Glass",
+    "Verallia",
+    "Vetropack",
+    "BA Glass",
+    "Saverglass",
+    "Stoelzle Glass",
+    "Vidrala",
+    "HEINZ-GLAS",
+    "Gerresheimer",
+    "SGD Pharma",
+    "AGI Greenpac",
+    "HNG",
+    "Piramal Glass",
+    "Haldyn Glass",
+    "Empire Industries"
+  ],
+  "equipment_suppliers": [
+    "Sanjin",
+    "Bottero",
+    "Emhart Glass",
+    "Argos",
+    "IRIS",
+    "Sheppee",
+    "HORN Glass Industries",
+    "Tiama"
+  ],
+  "luxury_packaging": [
+    "LVMH",
+    "Coty",
+    "Baralan",
+    "Chanel",
+    "Hermes",
+    "Estee Lauder",
+    "Puig",
+    "Clive Christian"
+  ],
+  "premium_beverage_companies": [
+    "Diageo",
+    "Pernod Ricard",
+    "Bacardi",
+    "Brown-Forman",
+    "Rémy Cointreau",
+    "Campari Group",
+    "Suntory Holdings",
+    "LVMH Wines & Spirits"
+  ],
+  "indian_premium_beverage_companies": [
+    "United Spirits",
+    "Radico Khaitan",
+    "Allied Blenders and Distillers",
+    "Tilaknagar Industries",
+    "Piccadily Agro Industries",
+    "Amrut Distilleries",
+    "John Distilleries"
+  ]
+}

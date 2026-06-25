@@ -1,0 +1,15 @@
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables (secret credentials)
+.env
+
+# Excel reports
+*.xlsx
+
+# Editor settings
+.vscode/
+.idea/

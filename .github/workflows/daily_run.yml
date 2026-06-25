@@ -1,0 +1,64 @@
+name: PGP Container Glass Intelligence — Daily Run
+
+on:
+  schedule:
+    # 8:00 AM IST = 2:30 AM UTC (IST is UTC+5:30)
+    - cron: '30 2 * * *'
+
+  # Allow manual trigger from GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      debug_mode:
+        description: 'Run in debug mode (extra verbose logging)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  intelligence-run:
+    name: Daily Container Glass Intelligence Pipeline
+    runs-on: ubuntu-latest
+
+    # Required permission to commit processed_urls.json back to repo
+    permissions:
+      contents: write
+
+    steps:
+      # ── Step 1: Checkout repository ──────────────────────────────────────
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Step 2: Set up Python ────────────────────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # ── Step 3: Install dependencies ─────────────────────────────────────
+      - name: Install Python Dependencies
+        run: pip install -r requirements.txt
+
+      # ── Step 4: Run intelligence pipeline ───────────────────────────────
+      - name: Run Container Glass Intelligence Pipeline
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENTS: ${{ secrets.RECIPIENTS }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python main.py
+
+      # ── Step 5: Commit updated state files ───────────────────────────────
+      - name: Commit Updated State Files
+        if: always()
+        run: |
+          git config --global user.name "PGP Glass Intelligence Bot"
+          git config --global user.email "pgp-glass-bot@noreply.github.com"
+          git add processed_urls.json data/sources.json data/potential_sources.json || true
+          # Only commit if there's an actual change
+          git diff --staged --quiet || git commit -m "chore: update state files [$(date -u '+%Y-%m-%d')] [skip ci]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
