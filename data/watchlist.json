@@ -149,7 +149,7 @@
     },
     {
       "name": "Sheppee",
-      "aliases": ["Sheppee International"],
+      "aliases": ["Sheppee International", "Sheppe"],
       "industry_type": "equipment_supplier",
       "country": "UK",
       "priority": 2
@@ -170,161 +170,161 @@
     },
     {
       "name": "LVMH",
-      "aliases": ["Moët Hennessy Louis Vuitton", "Louis Vuitton"],
+      "aliases": ["Moët Hennessy Louis Vuitton", "Louis Vuitton", "LVMH", "Moet Hennessy", "Moët Hennessy", "Hennessy", "Glenmorangie", "Moët & Chandon", "Moet & Chandon"],
       "industry_type": "luxury_packaging",
       "country": "France",
       "priority": 3
     },
     {
       "name": "Coty",
-      "aliases": ["Coty Inc"],
+      "aliases": ["Coty Inc", "Coty"],
       "industry_type": "luxury_packaging",
       "country": "USA",
       "priority": 3
     },
     {
       "name": "Baralan",
-      "aliases": ["Baralan International", "Baralan Group"],
+      "aliases": ["Baralan International", "Baralan Group", "Baralan"],
       "industry_type": "luxury_packaging",
       "country": "Italy",
       "priority": 3
     },
     {
       "name": "Chanel",
-      "aliases": ["Chanel Inc"],
+      "aliases": ["Chanel Inc", "Chanel"],
       "industry_type": "luxury_packaging",
       "country": "France",
       "priority": 3
     },
     {
       "name": "Hermes",
-      "aliases": ["Hermès"],
+      "aliases": ["Hermès", "Hermes"],
       "industry_type": "luxury_packaging",
       "country": "France",
       "priority": 3
     },
     {
       "name": "Estee Lauder",
-      "aliases": ["Estée Lauder", "Lauder", "Estee Lauder Companies"],
+      "aliases": ["Estée Lauder", "Lauder", "Estee Lauder Companies", "Estee Lauder"],
       "industry_type": "luxury_packaging",
       "country": "USA",
       "priority": 3
     },
     {
       "name": "Puig",
-      "aliases": ["Puig Group", "Puig Beauty"],
+      "aliases": ["Puig Group", "Puig Beauty", "Puig"],
       "industry_type": "luxury_packaging",
       "country": "Spain",
       "priority": 3
     },
     {
       "name": "Clive Christian",
-      "aliases": ["Clive Christian Perfumes"],
+      "aliases": ["Clive Christian Perfumes", "Clive Christian"],
       "industry_type": "luxury_packaging",
       "country": "UK",
       "priority": 3
     },
     {
       "name": "Diageo",
-      "aliases": ["Diageo plc"],
+      "aliases": ["Diageo", "Diageo plc", "Johnnie Walker", "Talisker", "Don Julio", "Tanqueray"],
       "industry_type": "premium_beverage",
       "country": "UK",
       "priority": 2
     },
     {
       "name": "Pernod Ricard",
-      "aliases": ["Pernod"],
+      "aliases": ["Pernod", "Pernod Ricard", "Chivas Regal", "Glenlivet", "Jameson", "Absolut"],
       "industry_type": "premium_beverage",
       "country": "France",
       "priority": 2
     },
     {
       "name": "Bacardi",
-      "aliases": ["Bacardi Limited"],
+      "aliases": ["Bacardi", "Bacardi Limited", "Grey Goose", "Dewar's", "Bombay Sapphire"],
       "industry_type": "premium_beverage",
       "country": "Bermuda",
       "priority": 2
     },
     {
       "name": "Brown-Forman",
-      "aliases": ["Brown Forman"],
+      "aliases": ["Brown-Forman", "Brown Forman", "Jack Daniel's", "Woodford Reserve"],
       "industry_type": "premium_beverage",
       "country": "USA",
       "priority": 2
     },
     {
       "name": "Rémy Cointreau",
-      "aliases": ["Remy Cointreau"],
+      "aliases": ["Remy Cointreau", "Rémy Cointreau", "Rémy Martin", "Remy Martin", "Bruichladdich"],
       "industry_type": "premium_beverage",
       "country": "France",
       "priority": 2
     },
     {
       "name": "Campari Group",
-      "aliases": ["Gruppo Campari", "Campari"],
+      "aliases": ["Gruppo Campari", "Campari", "Campari Group", "Wild Turkey", "Grand Marnier"],
       "industry_type": "premium_beverage",
       "country": "Italy",
       "priority": 2
     },
     {
       "name": "Suntory Holdings",
-      "aliases": ["Suntory"],
+      "aliases": ["Suntory", "Suntory Holdings", "Yamazaki", "Hibiki", "Hakushu"],
       "industry_type": "premium_beverage",
       "country": "Japan",
       "priority": 2
     },
     {
       "name": "LVMH Wines & Spirits",
-      "aliases": ["Moet Hennessy", "Moët Hennessy", "Hennessy"],
+      "aliases": ["Moet Hennessy", "Moët Hennessy", "Hennessy", "Glenmorangie", "Moët & Chandon", "Moet & Chandon", "LVMH"],
       "industry_type": "premium_beverage",
       "country": "France",
       "priority": 2
     },
     {
       "name": "United Spirits",
-      "aliases": ["USL", "McDowell's", "United Spirits Limited"],
+      "aliases": ["United Spirits", "USL", "McDowell's", "United Spirits Limited", "Johnnie Walker India", "Singleton"],
       "industry_type": "indian_premium_beverage",
       "country": "India",
       "priority": 2
     },
     {
       "name": "Radico Khaitan",
-      "aliases": ["Radico"],
+      "aliases": ["Radico", "Radico Khaitan", "Rampur Single Malt", "Jaisalmer Gin"],
       "industry_type": "indian_premium_beverage",
       "country": "India",
       "priority": 2
     },
     {
       "name": "Allied Blenders and Distillers",
-      "aliases": ["ABD", "Allied Blenders"],
+      "aliases": ["Allied Blenders and Distillers", "ABD", "Allied Blenders", "Sterling Reserve Premium", "Sterling Reserve"],
       "industry_type": "indian_premium_beverage",
       "country": "India",
       "priority": 2
     },
     {
       "name": "Tilaknagar Industries",
-      "aliases": ["TI", "Tilaknagar"],
+      "aliases": ["Tilaknagar Industries", "TI", "Tilaknagar", "Mansion House", "Mansion House Brandy"],
       "industry_type": "indian_premium_beverage",
       "country": "India",
       "priority": 2
     },
     {
       "name": "Piccadily Agro Industries",
-      "aliases": ["Piccadily", "Indri", "Piccadily Agro"],
+      "aliases": ["Piccadily Agro Industries", "Piccadily", "Indri", "Piccadily Agro", "Indri Single Malt"],
       "industry_type": "indian_premium_beverage",
       "country": "India",
       "priority": 2
     },
     {
       "name": "Amrut Distilleries",
-      "aliases": ["Amrut", "Amrut Single Malt"],
+      "aliases": ["Amrut Distilleries", "Amrut", "Amrut Single Malt"],
       "industry_type": "indian_premium_beverage",
       "country": "India",
       "priority": 2
     },
     {
       "name": "John Distilleries",
-      "aliases": ["Paul John", "John Distilleries Pvt Ltd"],
+      "aliases": ["John Distilleries", "Paul John", "John Distilleries Pvt Ltd", "Paul John Single Malt"],
       "industry_type": "indian_premium_beverage",
       "country": "India",
       "priority": 2
