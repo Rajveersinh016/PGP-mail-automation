@@ -1,8 +1,7 @@
 """
 main.py — PGP Container Glass Intelligence Platform
 Master orchestrator. Runs the simplified, optimized performance-first pipeline:
-1. Scrape (Parallel) → 2. Local Filter (Watchlist + Keywords + 24h) → 3. Deduplicate 
-→ 4. Gemini AI Analysis & Market Pulse → 5. Report (Pulse + Dashboard) → 6. Email → 7. Logging & Cleanup
+1. Health Checks → 2. Retry Loop (Scrape -> Filter -> Deduplicate -> Gemini -> Report -> Email -> Save State)
 """
 
 import logging
@@ -10,6 +9,7 @@ import os
 import sys
 import json
 import re
+import time
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
@@ -32,7 +32,6 @@ WATCHLIST_FILE = DATA_DIR / "watchlist.json"
 KEYWORDS_FILE = DATA_DIR / "keywords.json"
 LOGS_DIR = Path(__file__).parent / "logs"
 
-# Fallback context keywords in case file is missing
 DEFAULT_CONTEXT_KEYWORDS = [
     "container glass", "bottle", "bottles", "glass packaging", "glass bottle",
     "furnace", "furnaces", "is machine", "is machines", "forming machine",
@@ -67,6 +66,52 @@ def load_env():
                 log.warning(f"Failed to load {filename}: {e}")
 
 
+def health_check() -> bool:
+    """
+    Verify all prerequisites before execution:
+    1. Gemini API key is present
+    2. Gmail credentials are present
+    3. Sources config exists and is readable
+    4. Connectivity to key external dependencies (Gemini, Google News, Glass Online)
+    """
+    log.info("Running pre-flight reliability health checks...")
+    
+    # 1. Credentials Check
+    if not os.environ.get("GEMINI_API_KEY"):
+        raise ValueError("GEMINI_API_KEY environment variable is missing.")
+    if not os.environ.get("GMAIL_USER") or not os.environ.get("GMAIL_APP_PASSWORD"):
+        raise ValueError("GMAIL_USER or GMAIL_APP_PASSWORD credentials are missing.")
+        
+    # 2. Source Configuration Check
+    from scraper import SOURCES_FILE
+    if not SOURCES_FILE.exists():
+        raise FileNotFoundError(f"Sources registry file not found at {SOURCES_FILE}")
+    try:
+        sources = json.loads(SOURCES_FILE.read_text(encoding="utf-8"))
+        if not isinstance(sources, list) or len(sources) == 0:
+            raise ValueError("Sources configuration list is empty.")
+    except Exception as e:
+        raise ValueError(f"Sources configuration file is corrupted or unreadable: {e}")
+        
+    # 3. Connectivity Checks for Critical Dependencies
+    dependencies = {
+        "Gemini API Portal": "https://generativelanguage.googleapis.com",
+        "Google News RSS": "https://news.google.com",
+        "Glass Online": "https://www.glassonline.com"
+    }
+    
+    import requests
+    for name, url in dependencies.items():
+        try:
+            resp = requests.get(url, timeout=6)
+            log.info(f"  ✓ {name} connectivity check: Reachable (Status {resp.status_code})")
+        except Exception as e:
+            raise ConnectionError(f"Cannot connect to {name} ({url}). Checking internet/DNS: {e}")
+            
+    log.info("✓ Pre-flight health checks passed successfully.")
+    return True
+
+
 def load_watchlist() -> dict:
     """Load structured watchlist.json."""
     if not WATCHLIST_FILE.exists():
@@ -80,7 +125,7 @@ def load_watchlist() -> dict:
 
 
 def load_context_keywords() -> list[str]:
-    """Load context keywords from keywords.json or return fallbacks."""
+    """Load context keywords from keywords.json or return defaults."""
     if not KEYWORDS_FILE.exists():
         log.warning("Keywords file data/keywords.json not found! Using defaults.")
         return DEFAULT_CONTEXT_KEYWORDS
@@ -101,7 +146,7 @@ def local_pre_filter(articles: list[dict], watchlist: dict, context_keywords: li
     now = datetime.now(timezone.utc)
     date_limit = now - timedelta(hours=24)
     
-    # 1. Compile company name and alias patterns
+    # Compile company name and alias patterns
     company_patterns = []
     companies = watchlist.get("companies", [])
     for co in companies:
@@ -109,16 +154,15 @@ def local_pre_filter(articles: list[dict], watchlist: dict, context_keywords: li
         aliases = co.get("aliases", [])
         terms = [name] + [a for a in aliases if a.strip()]
         for term in terms:
-            # Whole-word boundaries to avoid partial matches
             company_patterns.append(re.compile(rf"\b{re.escape(term)}\b", re.IGNORECASE))
             
-    # 2. Compile context keywords patterns
+    # Compile context keywords patterns
     context_patterns = [re.compile(rf"\b{re.escape(w)}\b", re.IGNORECASE) for w in context_keywords]
 
     log.info(f"Applying local filter (24h limit, {len(company_patterns)} company terms, {len(context_patterns)} context keywords)...")
 
     for a in articles:
-        # Check publication date (strict 24 hours)
+        # Check publication date
         pub_str = a.get("published", "")
         if pub_str:
             try:
@@ -126,7 +170,7 @@ def local_pre_filter(articles: list[dict], watchlist: dict, context_keywords: li
                 if pub_dt < date_limit:
                     continue
             except Exception:
-                pass # If parsing fails, fall back to matching text
+                pass
                 
         # Match company and context in title or text
         title_text = f"{a.get('title', '')} {a.get('raw_text', '')}".lower()
@@ -145,6 +189,20 @@ def local_pre_filter(articles: list[dict], watchlist: dict, context_keywords: li
     return filtered
 
 
+def check_timeout(start_time: datetime, run_stats: dict):
+    """Gracefully terminates execution if runtime exceeds 9 minutes."""
+    elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
+    if elapsed > 540: # 9 minutes limit
+        err_msg = f"Pipeline runtime exceeded 9 minutes limit ({elapsed:.1f}s). Gracefully exiting to prevent hard crash."
+        log.error(f"✗ {err_msg}")
+        run_stats["errors"].append(err_msg)
+        run_stats["email_status"] = "Failed (Execution Timeout)"
+        run_stats["execution_time_seconds"] = elapsed
+        save_run_log(run_stats)
+        write_github_summary(run_stats)
+        sys.exit(1)
+
+
 def save_run_log(stats: dict):
     """Save execution statistics to a JSON log file in the logs/ directory."""
     try:
@@ -158,94 +216,92 @@ def save_run_log(stats: dict):
         log.error(f"Failed to save run log: {e}")
 
 
-def main():
-    load_env()
-    start_time = datetime.now(timezone.utc)
-    
-    _banner("PGP Container Glass Daily Intelligence Pipeline (Version 5)")
-    log.info(f"Started: {start_time.strftime('%Y-%m-%d %H:%M:%S UTC')}")
+def write_github_summary(stats: dict):
+    """Write run statistics to GitHub Actions Job Summary Markdown file."""
+    summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not summary_file:
+        return
+    try:
+        status_emoji = "✅ SUCCESS" if stats["email_status"] == "Success" else "❌ FAILED"
+        overall_result = (
+            "Completed successfully." if stats["email_status"] == "Success" 
+            else "Failed. Check workflow logs or artifact files for details."
+        )
+        if stats["email_status"].startswith("Skipped"):
+            status_emoji = "⚠️ SKIPPED"
+            overall_result = f"Skipped: {stats['email_status']}"
+            
+        md = f"""### 📊 PGP Container Glass Market Intelligence Platform Summary
 
-    # Standard run statistics dictionary
-    run_stats = {
-        "run_time": start_time.isoformat(),
-        "execution_time_seconds": 0.0,
-        "sources_checked": [],
-        "articles_collected": 0,
-        "duplicates_removed": 0,
-        "gemini_accepted": 0,
-        "gemini_rejected": 0,
-        "email_status": "Pending",
-        "errors": []
-    }
+| Metric | Status / Value |
+| :--- | :--- |
+| **Workflow Status** | {status_emoji} |
+| **Articles Found** | `{stats['articles_collected']}` |
+| **Articles Sent** | `{stats['gemini_accepted']}` |
+| **Execution Time** | `{stats['execution_time_seconds']:.1f} seconds` |
+| **Email Status** | `{stats['email_status']}` |
+| **Overall Result** | {overall_result} |
 
-    # Verify key environment variables
-    if not os.environ.get("GEMINI_API_KEY"):
-        err_msg = "GEMINI_API_KEY is missing. Pipeline cannot continue."
-        log.error(f"✗ {err_msg}")
-        run_stats["errors"].append(err_msg)
-        run_stats["email_status"] = "Skipped (Configuration Error)"
-        save_run_log(run_stats)
-        sys.exit(1)
+#### 📂 Detailed Execution Statistics
+* **Sources Checked**: {len(stats['sources_checked'])} active sources
+* **Duplicates Prevented**: {stats['duplicates_removed']} articles
+* **Gemini Approved**: {stats['gemini_accepted']} relevant developments
+* **Gemini Discarded**: {stats['gemini_rejected']} irrelevant news items
+"""
+        if stats["errors"]:
+            md += "\n#### ⚠ Errors Encountered:\n"
+            for err in stats["errors"]:
+                md += f"- `{err}`\n"
+                
+        Path(summary_file).write_text(md, encoding="utf-8")
+        log.info("✓ Written Job Summary markdown to GITHUB_STEP_SUMMARY.")
+    except Exception as e:
+        log.warning(f"Failed to write GITHUB_STEP_SUMMARY: {e}")
 
+
+def execute_pipeline(start_time: datetime, run_stats: dict) -> bool:
+    """
+    Executes a single pipeline run. Returns True on success, False on failure.
+    Raises exception on severe infrastructure failures.
+    """
     # 1. Scrape (Parallel)
     _banner("STEP 1: Scraping all sources in parallel")
     from scraper import scrape_all_sources
-    try:
-        raw_articles, sources_checked = scrape_all_sources()
-        run_stats["sources_checked"] = sources_checked
-        run_stats["articles_collected"] = len(raw_articles)
-    except Exception as e:
-        err_msg = f"Scraping failed: {e}"
-        log.error(f"✗ {err_msg}")
-        run_stats["errors"].append(err_msg)
-        run_stats["email_status"] = "Failed"
-        run_stats["execution_time_seconds"] = (datetime.now(timezone.utc) - start_time).total_seconds()
-        save_run_log(run_stats)
-        sys.exit(1)
+    raw_articles, sources_checked = scrape_all_sources()
+    run_stats["sources_checked"] = sources_checked
+    run_stats["articles_collected"] = len(raw_articles)
     
     if not raw_articles:
-        log.warning("No raw articles fetched. Exiting.")
+        log.warning("No raw articles fetched. Skipping report generation.")
         run_stats["email_status"] = "Skipped (No News)"
-        run_stats["execution_time_seconds"] = (datetime.now(timezone.utc) - start_time).total_seconds()
-        save_run_log(run_stats)
-        sys.exit(0)
+        return True
 
     # 2. Local Filter
+    check_timeout(start_time, run_stats)
     _banner("STEP 2: Applying fast local pre-filter")
     watchlist = load_watchlist()
     context_keywords = load_context_keywords()
     filtered = local_pre_filter(raw_articles, watchlist, context_keywords)
     
     if not filtered:
-        log.info("No candidate articles passed the local pre-filter. Exiting.")
+        log.info("No candidate articles passed the local pre-filter. Skipping report generation.")
         run_stats["email_status"] = "Skipped (No News)"
-        run_stats["execution_time_seconds"] = (datetime.now(timezone.utc) - start_time).total_seconds()
-        save_run_log(run_stats)
-        sys.exit(0)
+        return True
 
     # 3. Deduplicate
+    check_timeout(start_time, run_stats)
     _banner("STEP 3: Removing duplicate articles")
     from deduplicator import get_new_articles, update_processed_urls
-    try:
-        new_articles, cross_run_count, intra_batch_count = get_new_articles(filtered)
-        run_stats["duplicates_removed"] = cross_run_count + intra_batch_count
-    except Exception as e:
-        err_msg = f"Deduplication failed: {e}"
-        log.error(f"✗ {err_msg}")
-        run_stats["errors"].append(err_msg)
-        run_stats["email_status"] = "Failed"
-        run_stats["execution_time_seconds"] = (datetime.now(timezone.utc) - start_time).total_seconds()
-        save_run_log(run_stats)
-        sys.exit(1)
+    new_articles, cross_run_count, intra_batch_count = get_new_articles(filtered)
+    run_stats["duplicates_removed"] = cross_run_count + intra_batch_count
     
     if not new_articles:
-        log.info("All candidates already reported in previous runs. Exiting.")
+        log.info("All candidates already reported in previous runs. Skipping report generation.")
         run_stats["email_status"] = "Skipped (No News)"
-        run_stats["execution_time_seconds"] = (datetime.now(timezone.utc) - start_time).total_seconds()
-        save_run_log(run_stats)
-        sys.exit(0)
+        return True
 
     # 4. Gemini AI Analysis
+    check_timeout(start_time, run_stats)
     _banner("STEP 4: AI relevance validation and summarization")
     from gemini import analyze_article, generate_market_pulse
     from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -283,18 +339,17 @@ def main():
                 run_stats["errors"].append(f"Gemini thread error: {e}")
 
     if not curated_articles:
-        log.info("No relevant container glass developments found after AI analysis. Exiting.")
+        log.info("No relevant container glass developments found after AI analysis. Skipping report.")
         run_stats["email_status"] = "Skipped (No News)"
-        run_stats["execution_time_seconds"] = (datetime.now(timezone.utc) - start_time).total_seconds()
-        save_run_log(run_stats)
-        sys.exit(0)
+        return True
 
     # 4b. Generate Daily Market Pulse Paragraph
+    check_timeout(start_time, run_stats)
     log.info("Generating cohesive daily Market Pulse summary...")
     market_pulse = generate_market_pulse(curated_articles)
-    log.info(f"Market Pulse summary generated successfully.")
 
     # 5. Report & Email
+    check_timeout(start_time, run_stats)
     _banner("STEP 5: Generating reports and sending email")
     from reporter import generate_report
     from email_service import send_email
@@ -304,7 +359,6 @@ def main():
     success = send_email(html_body, excel_path, len(curated_articles))
 
     # 6. Cleanup & Save State
-    _banner("STEP 6: Cleaning up temporary files")
     if excel_path and os.path.exists(excel_path):
         try:
             os.remove(excel_path)
@@ -319,19 +373,88 @@ def main():
             update_processed_urls(curated_articles)
         except Exception as e:
             run_stats["errors"].append(f"Updating processed URLs failed: {e}")
+            log.error(f"Failed to update processed URLs: {e}")
     else:
-        log.error("✗ Email delivery failed. History NOT updated.")
+        log.error("✗ Email delivery failed. URL history not updated.")
         run_stats["email_status"] = "Failed"
         run_stats["errors"].append("SMTP delivery failed.")
 
+    return success
+
+
+def main():
+    load_env()
+    start_time = datetime.now(timezone.utc)
+    
+    _banner("PGP Container Glass Daily Intelligence Pipeline (Version 5.1)")
+    log.info(f"Started: {start_time.strftime('%Y-%m-%d %H:%M:%S UTC')}")
+
+    # Standard run statistics dictionary
+    run_stats = {
+        "run_time": start_time.isoformat(),
+        "execution_time_seconds": 0.0,
+        "sources_checked": [],
+        "articles_collected": 0,
+        "duplicates_removed": 0,
+        "gemini_accepted": 0,
+        "gemini_rejected": 0,
+        "email_status": "Pending",
+        "errors": []
+    }
+
+    # Prerequisite Health Check
+    try:
+        health_check()
+    except Exception as e:
+        err_msg = f"Pre-flight health check failed: {e}"
+        log.error(f"✗ {err_msg}")
+        run_stats["errors"].append(err_msg)
+        run_stats["email_status"] = "Skipped (Health Check Failed)"
+        run_stats["execution_time_seconds"] = (datetime.now(timezone.utc) - start_time).total_seconds()
+        save_run_log(run_stats)
+        write_github_summary(run_stats)
+        sys.exit(1)
+
+    max_retries = 3
+    retry_delay = 30
+    success = False
+
+    for attempt in range(1, max_retries + 1):
+        if attempt > 1:
+            log.info(f"Sleeping for {retry_delay} seconds before retry attempt {attempt}...")
+            time.sleep(retry_delay)
+            # Reset statistics for the fresh attempt
+            run_stats["errors"] = []
+            run_stats["duplicates_removed"] = 0
+            run_stats["gemini_accepted"] = 0
+            run_stats["gemini_rejected"] = 0
+            
+        log.info(f"Pipeline Execution Attempt {attempt}/{max_retries}")
+        
+        try:
+            success = execute_pipeline(start_time, run_stats)
+            if success:
+                break
+        except Exception as e:
+            err_msg = f"Pipeline execution failed on attempt {attempt}: {e}"
+            log.error(f"✗ {err_msg}")
+            run_stats["errors"].append(err_msg)
+
+    # Wrap up statistics
     elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
     run_stats["execution_time_seconds"] = elapsed
+    
+    # Save statistics JSON
     save_run_log(run_stats)
     
-    _banner(f"DONE — Run completed in {elapsed:.1f}s")
-    
+    # Write GitHub Summary
+    write_github_summary(run_stats)
+
     if not success:
+        log.error(f"✗ Pipeline failed to complete after {max_retries} attempts.")
         sys.exit(1)
+    
+    _banner(f"DONE — Run completed in {elapsed:.1f}s")
 
 
 if __name__ == "__main__":

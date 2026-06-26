@@ -2,8 +2,9 @@ name: PGP Container Glass Intelligence — Daily Run
 
 on:
   schedule:
-    # 8:00 AM IST = 2:30 AM UTC (IST is UTC+5:30)
-    - cron: '30 2 * * *'
+    # 8:30 AM IST = 3:00 AM UTC (IST is UTC+5:30)
+    # Changed from 2:30 AM UTC to 3:00 AM UTC to align accurately in the 8-9 AM IST window
+    - cron: '0 3 * * *'
 
   # Allow manual trigger from GitHub Actions UI
   workflow_dispatch:
@@ -18,6 +19,7 @@ jobs:
   intelligence-run:
     name: Daily Container Glass Intelligence Pipeline
     runs-on: ubuntu-latest
+    timeout-minutes: 10 # Graceful timeout boundary protection
 
     # Required permission to commit processed_urls.json back to repo
     permissions:
@@ -59,6 +61,15 @@ jobs:
           git add processed_urls.json data/sources.json data/potential_sources.json || true
           # Only commit if there's an actual change
           git diff --staged --quiet || git commit -m "chore: update state files [$(date -u '+%Y-%m-%d')] [skip ci]"
-          git push
+          git push || echo "⚠ Git push failed (likely due to concurrent run push or git lock). The workflow continues without crashing."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Step 6: Upload execution logs as artifacts ──────────────────────
+      - name: Upload Run Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: execution-logs
+          path: logs/
+          retention-days: 7
