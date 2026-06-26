@@ -91,7 +91,7 @@ def _save_store(store: dict) -> None:
 
 # ── Deduplication Core ────────────────────────────────────────────────────────
 
-def get_new_articles(articles: list[dict]) -> list[dict]:
+def get_new_articles(articles: list[dict]) -> tuple[list[dict], int, int]:
     """
     Filters out duplicate articles using 4-level deduplication:
       - Cross-run: exact URL and Title hashes already sent in past runs are removed.
@@ -178,7 +178,7 @@ def get_new_articles(articles: list[dict]) -> list[dict]:
         f"{skipped_cross_run} cross-run dups removed | "
         f"{skipped_intra_batch} intra-batch dups resolved by priority"
     )
-    return new_articles
+    return new_articles, skipped_cross_run, skipped_intra_batch
 
 
 def update_processed_urls(articles: list[dict]) -> None:

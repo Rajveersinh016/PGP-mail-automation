@@ -84,40 +84,48 @@ def _safe_get(url: str, verify: bool = True) -> requests.Response | None:
 
 
 def _generate_watchlist_queries(watchlist: dict) -> list[str]:
-    """Construct optimized queries grouped by OR logic."""
+    """
+    Construct optimized queries grouped by OR logic for every watchlist company.
+    Combines company name + aliases with container glass industry context suffixes.
+    """
+    companies = watchlist.get("companies", [])
+    suffixes = [
+        "expansion", "new plant", "investment", "furnace", 
+        "bottle", "packaging", "acquisition", "sustainability"
+    ]
     queries = []
     
-    # 1. Manufacturers
-    mfrs = watchlist.get("container_glass_manufacturers", [])
-    cleaned_mfrs = [f'"{m}"' if m != "HNG" else '"HNG Glass" OR "Hindustan National Glass"' for m in mfrs]
-    for i in range(0, len(cleaned_mfrs), 4):
-        chunk = cleaned_mfrs[i:i+4]
-        queries.append("(" + " OR ".join(chunk) + ") AND (glass OR bottle OR furnace OR manufacturer)")
+    for co in companies:
+        name = co.get("name", "")
+        aliases = co.get("aliases", [])
+        if not name:
+            continue
+            
+        # Collect all active non-empty names
+        names = [name] + [a for a in aliases if a.strip()]
+        names_escaped = []
+        for n in names:
+            if " " in n or "-" in n or "/" in n:
+                names_escaped.append(f'"{n}"')
+            else:
+                names_escaped.append(n)
+                
+        names_part = " OR ".join(names_escaped)
+        if len(names_escaped) > 1:
+            names_part = f"({names_part})"
+            
+        # Format suffixes (wrap multi-word suffixes in quotes, e.g. "new plant")
+        suffixes_escaped = []
+        for s in suffixes:
+            if " " in s:
+                suffixes_escaped.append(f'"{s}"')
+            else:
+                suffixes_escaped.append(s)
+        suffixes_part = " OR ".join(suffixes_escaped)
         
-    # 2. Equipment Suppliers
-    eqs = watchlist.get("equipment_suppliers", [])
-    cleaned_eqs = [f'"{e}"' + (' AND (glass OR furnace OR machinery OR bottle)' if e in ("IRIS", "Argos", "Bottero", "Sanjin", "Tiama", "Sheppee") else '') for e in eqs]
-    for i in range(0, len(cleaned_eqs), 4):
-        chunk = cleaned_eqs[i:i+4]
-        queries.append(" OR ".join(chunk))
-        
-    # 3. Luxury Packaging
-    lux = watchlist.get("luxury_packaging", [])
-    for i in range(0, len(lux), 4):
-        chunk = [f'"{l}"' for l in lux[i:i+4]]
-        queries.append(f"({ ' OR '.join(chunk) }) AND (glass OR bottle OR packaging OR perfume)")
-        
-    # 4. Premium Beverage Companies
-    bev = watchlist.get("premium_beverage_companies", [])
-    for i in range(0, len(bev), 4):
-        chunk = [f'"{b}"' for b in bev[i:i+4]]
-        queries.append(f"({ ' OR '.join(chunk) }) AND (glass OR bottle OR packaging OR spirits OR launch)")
-        
-    # 5. Indian Premium Beverage Companies
-    ind_bev = watchlist.get("indian_premium_beverage_companies", [])
-    for i in range(0, len(ind_bev), 4):
-        chunk = [f'"{ib}"' for ib in ind_bev[i:i+4]]
-        queries.append(f"({ ' OR '.join(chunk) }) AND (glass OR bottle OR packaging OR launch)")
+        # Build optimized Google News query string
+        query = f"{names_part} AND ({suffixes_part})"
+        queries.append(query)
         
     return queries
 
@@ -171,7 +179,7 @@ def scrape_html(source: dict) -> list[dict]:
         soup = BeautifulSoup(resp.text, "lxml")
         tags = soup.select(selector) if selector else []
         if not tags:
-            tags = soup.select("article a, h2 a, h3 a, .news a, .article a")
+            tags = soup.select("article a, h2 a, h3 a, .news a, .article a, .news-item a")
             
         seen = set()
         for tag in tags[:MAX_ARTICLES_PER_SOURCE]:
@@ -230,6 +238,8 @@ def scrape_source(source: dict, watchlist_data: dict) -> list[dict]:
     """Scrape a single configured source based on its method."""
     method = source.get("scraping_method", "html")
     name = source["name"]
+    tier = source.get("tier", 3)
+    priority_type = source.get("priority_type", "other")
     
     if source.get("status") == "inactive":
         return []
@@ -243,7 +253,7 @@ def scrape_source(source: dict, watchlist_data: dict) -> list[dict]:
             cfg = source.get("scraping_config", {})
             query = cfg.get("query", "")
             if query:
-                return scrape_google_news_rss(query, name, source["priority_type"], source["tier"])
+                return scrape_google_news_rss(query, name, priority_type, tier)
         elif method == "google_news_watchlist":
             if not watchlist_data:
                 return []
@@ -253,8 +263,8 @@ def scrape_source(source: dict, watchlist_data: dict) -> list[dict]:
             watchlist_articles = []
             with ThreadPoolExecutor(max_workers=6) as executor:
                 futures = {
-                    executor.submit(scrape_google_news_rss, q, "Google News (Watchlist)", "company_website", source["tier"]): q 
-                    for q in queries
+                    executor.submit(scrape_google_news_rss, q, f"Google News (Watchlist - {co_name})", "company_website", tier): q 
+                    for q, co_name in zip(queries, [c.get("name", "Unknown") for c in watchlist_data.get("companies", [])])
                 }
                 for future in as_completed(futures):
                     try:
@@ -268,11 +278,14 @@ def scrape_source(source: dict, watchlist_data: dict) -> list[dict]:
     return []
 
 
-def scrape_all_sources() -> list[dict]:
-    """Load sources, perform scraping in parallel using ThreadPoolExecutor."""
+def scrape_all_sources() -> tuple[list[dict], list[str]]:
+    """
+    Load sources, perform scraping in parallel using ThreadPoolExecutor.
+    Returns a tuple of (all_articles, list_of_sources_checked).
+    """
     if not SOURCES_FILE.exists():
         log.error(f"Sources registry file not found at {SOURCES_FILE}")
-        return []
+        return [], []
         
     sources_data = json.loads(SOURCES_FILE.read_text(encoding="utf-8"))
     watchlist_data = {}
@@ -280,24 +293,28 @@ def scrape_all_sources() -> list[dict]:
         watchlist_data = json.loads(WATCHLIST_FILE.read_text(encoding="utf-8"))
         
     all_articles = []
+    sources_checked = []
     
-    # Run scraping of all main sources in parallel
-    log.info(f"Starting parallel scrape of {len(sources_data)} sources...")
+    active_sources = [s for s in sources_data if s.get("status") != "inactive"]
+    
+    log.info(f"Starting parallel scrape of {len(active_sources)} active sources...")
     with ThreadPoolExecutor(max_workers=10) as executor:
         futures = {
             executor.submit(scrape_source, source, watchlist_data): source 
-            for source in sources_data
+            for source in active_sources
         }
         for future in as_completed(futures):
             source = futures[future]
+            name = source['name']
+            sources_checked.append(name)
             try:
                 res = future.result()
                 all_articles.extend(res)
-                log.info(f"  ✓ {source['name']}: Scraped {len(res)} articles")
+                log.info(f"  ✓ {name}: Scraped {len(res)} articles")
             except Exception as e:
-                log.error(f"  ✗ Thread error for {source['name']}: {e}")
+                log.error(f"  ✗ Thread error for {name}: {e}")
                 
     # Clean up results
     all_articles = [a for a in all_articles if a.get("url") and a.get("title")]
     log.info(f"Parallel scraping complete. Collected {len(all_articles)} raw articles.")
-    return all_articles
+    return all_articles, sources_checked

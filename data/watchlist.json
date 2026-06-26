@@ -1,59 +1,333 @@
 {
-  "container_glass_manufacturers": [
-    "O-I Glass",
-    "Ardagh Glass",
-    "Verallia",
-    "Vetropack",
-    "BA Glass",
-    "Saverglass",
-    "Stoelzle Glass",
-    "Vidrala",
-    "HEINZ-GLAS",
-    "Gerresheimer",
-    "SGD Pharma",
-    "AGI Greenpac",
-    "HNG",
-    "Piramal Glass",
-    "Haldyn Glass",
-    "Empire Industries"
-  ],
-  "equipment_suppliers": [
-    "Sanjin",
-    "Bottero",
-    "Emhart Glass",
-    "Argos",
-    "IRIS",
-    "Sheppee",
-    "HORN Glass Industries",
-    "Tiama"
-  ],
-  "luxury_packaging": [
-    "LVMH",
-    "Coty",
-    "Baralan",
-    "Chanel",
-    "Hermes",
-    "Estee Lauder",
-    "Puig",
-    "Clive Christian"
-  ],
-  "premium_beverage_companies": [
-    "Diageo",
-    "Pernod Ricard",
-    "Bacardi",
-    "Brown-Forman",
-    "Rémy Cointreau",
-    "Campari Group",
-    "Suntory Holdings",
-    "LVMH Wines & Spirits"
-  ],
-  "indian_premium_beverage_companies": [
-    "United Spirits",
-    "Radico Khaitan",
-    "Allied Blenders and Distillers",
-    "Tilaknagar Industries",
-    "Piccadily Agro Industries",
-    "Amrut Distilleries",
-    "John Distilleries"
+  "companies": [
+    {
+      "name": "O-I Glass",
+      "aliases": ["OI", "O-I", "Owens Illinois", "Owens-Illinois"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "USA",
+      "priority": 1
+    },
+    {
+      "name": "Ardagh Glass",
+      "aliases": ["Ardagh", "Ardagh Group", "Ardagh Glass Packaging"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "Luxembourg",
+      "priority": 1
+    },
+    {
+      "name": "Verallia",
+      "aliases": ["Verallia Group", "Verallia Packaging"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "France",
+      "priority": 1
+    },
+    {
+      "name": "Vetropack",
+      "aliases": ["Vetropack Group", "Vetropack Holding"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "Switzerland",
+      "priority": 1
+    },
+    {
+      "name": "BA Glass",
+      "aliases": ["BA Vidro", "Barbosa & Almeida"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "Portugal",
+      "priority": 1
+    },
+    {
+      "name": "Saverglass",
+      "aliases": ["Saver Glass"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "France",
+      "priority": 1
+    },
+    {
+      "name": "Stoelzle Glass",
+      "aliases": ["Stölzle", "Stoelzle", "Stölzle-Oberglas", "Stoelzle Glass Group"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "Austria",
+      "priority": 1
+    },
+    {
+      "name": "Vidrala",
+      "aliases": ["Vidrala Group", "Encirc"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "Spain",
+      "priority": 1
+    },
+    {
+      "name": "HEINZ-GLAS",
+      "aliases": ["Heinz Glas", "Heinz-Glass", "Heinz Glass"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "Germany",
+      "priority": 1
+    },
+    {
+      "name": "Gerresheimer",
+      "aliases": ["Gerresheimer Group", "Gerresheimer AG"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "Germany",
+      "priority": 1
+    },
+    {
+      "name": "SGD Pharma",
+      "aliases": ["SGD", "SGD Glass", "SGD Packaging"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "France",
+      "priority": 1
+    },
+    {
+      "name": "AGI Greenpac",
+      "aliases": ["AGI", "AGI Greenpac Ltd", "HSIL", "AGI Glasspack"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "India",
+      "priority": 1
+    },
+    {
+      "name": "HNG",
+      "aliases": ["Hindustan National Glass", "HNGIL", "HNG Glass", "Hindustan National Glass & Industries"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "India",
+      "priority": 1
+    },
+    {
+      "name": "Piramal Glass",
+      "aliases": ["Piramal", "PGP Glass", "PGP Glass Private Limited"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "India",
+      "priority": 1
+    },
+    {
+      "name": "Haldyn Glass",
+      "aliases": ["Haldyn", "Haldyn Glass Ltd"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "India",
+      "priority": 1
+    },
+    {
+      "name": "Empire Industries",
+      "aliases": ["Empire Glass", "Vitrum Glass"],
+      "industry_type": "container_glass_manufacturer",
+      "country": "India",
+      "priority": 1
+    },
+    {
+      "name": "Sanjin",
+      "aliases": ["Shandong Sanjin", "Sanjin Glass", "Sanjin Gear"],
+      "industry_type": "equipment_supplier",
+      "country": "China",
+      "priority": 2
+    },
+    {
+      "name": "Bottero",
+      "aliases": ["Bottero Glass", "Bottero Group"],
+      "industry_type": "equipment_supplier",
+      "country": "Italy",
+      "priority": 2
+    },
+    {
+      "name": "Emhart Glass",
+      "aliases": ["Emhart", "Bucher Emhart", "Bucher Emhart Glass"],
+      "industry_type": "equipment_supplier",
+      "country": "Switzerland",
+      "priority": 2
+    },
+    {
+      "name": "Argos",
+      "aliases": ["Argos Control", "Argos Inspection", "Argos Systems"],
+      "industry_type": "equipment_supplier",
+      "country": "Germany",
+      "priority": 2
+    },
+    {
+      "name": "IRIS",
+      "aliases": ["IRIS Inspection", "IRIS Inspection machines"],
+      "industry_type": "equipment_supplier",
+      "country": "France",
+      "priority": 2
+    },
+    {
+      "name": "Sheppee",
+      "aliases": ["Sheppee International"],
+      "industry_type": "equipment_supplier",
+      "country": "UK",
+      "priority": 2
+    },
+    {
+      "name": "HORN Glass Industries",
+      "aliases": ["HORN Glass", "Horn Glass", "Horn Anlagentechnik"],
+      "industry_type": "equipment_supplier",
+      "country": "Germany",
+      "priority": 2
+    },
+    {
+      "name": "Tiama",
+      "aliases": ["Tiama Inspection", "Tiama Glass"],
+      "industry_type": "equipment_supplier",
+      "country": "France",
+      "priority": 2
+    },
+    {
+      "name": "LVMH",
+      "aliases": ["Moët Hennessy Louis Vuitton", "Louis Vuitton"],
+      "industry_type": "luxury_packaging",
+      "country": "France",
+      "priority": 3
+    },
+    {
+      "name": "Coty",
+      "aliases": ["Coty Inc"],
+      "industry_type": "luxury_packaging",
+      "country": "USA",
+      "priority": 3
+    },
+    {
+      "name": "Baralan",
+      "aliases": ["Baralan International", "Baralan Group"],
+      "industry_type": "luxury_packaging",
+      "country": "Italy",
+      "priority": 3
+    },
+    {
+      "name": "Chanel",
+      "aliases": ["Chanel Inc"],
+      "industry_type": "luxury_packaging",
+      "country": "France",
+      "priority": 3
+    },
+    {
+      "name": "Hermes",
+      "aliases": ["Hermès"],
+      "industry_type": "luxury_packaging",
+      "country": "France",
+      "priority": 3
+    },
+    {
+      "name": "Estee Lauder",
+      "aliases": ["Estée Lauder", "Lauder", "Estee Lauder Companies"],
+      "industry_type": "luxury_packaging",
+      "country": "USA",
+      "priority": 3
+    },
+    {
+      "name": "Puig",
+      "aliases": ["Puig Group", "Puig Beauty"],
+      "industry_type": "luxury_packaging",
+      "country": "Spain",
+      "priority": 3
+    },
+    {
+      "name": "Clive Christian",
+      "aliases": ["Clive Christian Perfumes"],
+      "industry_type": "luxury_packaging",
+      "country": "UK",
+      "priority": 3
+    },
+    {
+      "name": "Diageo",
+      "aliases": ["Diageo plc"],
+      "industry_type": "premium_beverage",
+      "country": "UK",
+      "priority": 2
+    },
+    {
+      "name": "Pernod Ricard",
+      "aliases": ["Pernod"],
+      "industry_type": "premium_beverage",
+      "country": "France",
+      "priority": 2
+    },
+    {
+      "name": "Bacardi",
+      "aliases": ["Bacardi Limited"],
+      "industry_type": "premium_beverage",
+      "country": "Bermuda",
+      "priority": 2
+    },
+    {
+      "name": "Brown-Forman",
+      "aliases": ["Brown Forman"],
+      "industry_type": "premium_beverage",
+      "country": "USA",
+      "priority": 2
+    },
+    {
+      "name": "Rémy Cointreau",
+      "aliases": ["Remy Cointreau"],
+      "industry_type": "premium_beverage",
+      "country": "France",
+      "priority": 2
+    },
+    {
+      "name": "Campari Group",
+      "aliases": ["Gruppo Campari", "Campari"],
+      "industry_type": "premium_beverage",
+      "country": "Italy",
+      "priority": 2
+    },
+    {
+      "name": "Suntory Holdings",
+      "aliases": ["Suntory"],
+      "industry_type": "premium_beverage",
+      "country": "Japan",
+      "priority": 2
+    },
+    {
+      "name": "LVMH Wines & Spirits",
+      "aliases": ["Moet Hennessy", "Moët Hennessy", "Hennessy"],
+      "industry_type": "premium_beverage",
+      "country": "France",
+      "priority": 2
+    },
+    {
+      "name": "United Spirits",
+      "aliases": ["USL", "McDowell's", "United Spirits Limited"],
+      "industry_type": "indian_premium_beverage",
+      "country": "India",
+      "priority": 2
+    },
+    {
+      "name": "Radico Khaitan",
+      "aliases": ["Radico"],
+      "industry_type": "indian_premium_beverage",
+      "country": "India",
+      "priority": 2
+    },
+    {
+      "name": "Allied Blenders and Distillers",
+      "aliases": ["ABD", "Allied Blenders"],
+      "industry_type": "indian_premium_beverage",
+      "country": "India",
+      "priority": 2
+    },
+    {
+      "name": "Tilaknagar Industries",
+      "aliases": ["TI", "Tilaknagar"],
+      "industry_type": "indian_premium_beverage",
+      "country": "India",
+      "priority": 2
+    },
+    {
+      "name": "Piccadily Agro Industries",
+      "aliases": ["Piccadily", "Indri", "Piccadily Agro"],
+      "industry_type": "indian_premium_beverage",
+      "country": "India",
+      "priority": 2
+    },
+    {
+      "name": "Amrut Distilleries",
+      "aliases": ["Amrut", "Amrut Single Malt"],
+      "industry_type": "indian_premium_beverage",
+      "country": "India",
+      "priority": 2
+    },
+    {
+      "name": "John Distilleries",
+      "aliases": ["Paul John", "John Distilleries Pvt Ltd"],
+      "industry_type": "indian_premium_beverage",
+      "country": "India",
+      "priority": 2
+    }
   ]
 }
