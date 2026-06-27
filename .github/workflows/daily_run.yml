@@ -2,9 +2,9 @@ name: PGP Container Glass Intelligence — Daily Run
 
 on:
   schedule:
-    # 8:30 AM IST = 3:00 AM UTC (IST is UTC+5:30)
-    # Changed from 2:30 AM UTC to 3:00 AM UTC to align accurately in the 8-9 AM IST window
-    - cron: '0 3 * * *'
+    # 8:48 AM IST = 3:18 AM UTC (IST is UTC+5:30)
+    # Changed from 3:00 AM UTC to 3:18 AM UTC to avoid high congestion at the top of the hour on GitHub Actions scheduler
+    - cron: '18 3 * * *'
 
   # Allow manual trigger from GitHub Actions UI
   workflow_dispatch:
