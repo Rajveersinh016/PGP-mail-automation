@@ -300,17 +300,28 @@ def execute_pipeline(start_time: datetime, run_stats: dict) -> bool:
         run_stats["email_status"] = "Skipped (No News)"
         return True
 
-    # 4. Gemini AI Analysis
+    # 4. Gemini AI Analysis (with full article body fetch)
     check_timeout(start_time, run_stats)
-    _banner("STEP 4: AI relevance validation and summarization")
+    _banner("STEP 4: Full article fetch + AI relevance validation and summarization")
     from gemini import analyze_article, generate_market_pulse
+    from scraper import fetch_full_article
     from concurrent.futures import ThreadPoolExecutor, as_completed
     curated_articles = []
-    
-    log.info(f"Starting parallel AI analysis of {len(new_articles)} articles...")
+
+    def _analyze_with_full_text(article: dict) -> dict | None:
+        """Fetch the full article body then run Gemini analysis."""
+        full_text = fetch_full_article(article["url"])
+        if full_text and len(full_text) > 200:
+            article["raw_text"] = full_text
+            log.debug(f"    Full text fetched ({len(full_text)} chars): {article['title'][:45]}")
+        else:
+            log.debug(f"    Full text unavailable, using RSS/title text: {article['title'][:45]}")
+        return analyze_article(article)
+
+    log.info(f"Starting parallel full-text fetch + AI analysis of {len(new_articles)} articles...")
     with ThreadPoolExecutor(max_workers=5) as executor:
         futures = {
-            executor.submit(analyze_article, article): article 
+            executor.submit(_analyze_with_full_text, article): article
             for article in new_articles
         }
         for future in as_completed(futures):
@@ -320,14 +331,15 @@ def execute_pipeline(start_time: datetime, run_stats: dict) -> bool:
                 if analysis:
                     run_stats["gemini_accepted"] += 1
                     # Overwrite metadata from Gemini's verified extractions
-                    article["company"] = analysis.get("Company", "Unknown")
-                    article["country"] = analysis.get("Country", "Unknown")
-                    article["category"] = analysis.get("Category", "🌍 Industry Update")
-                    article["summary"] = analysis.get("Summary", article["title"])
+                    article["company"]         = analysis.get("Company", "Unknown")
+                    article["country"]         = analysis.get("Country", "Unknown")
+                    article["category"]        = analysis.get("Category", "🌍 Industry Update")
+                    article["summary"]         = analysis.get("Executive Summary", article["title"])
+                    article["key_details"]     = analysis.get("Key Details", "")
                     article["business_impact"] = analysis.get("Business Impact", "")
-                    article["priority"] = analysis.get("Priority", "Low")
-                    article["confidence"] = analysis.get("Confidence", "High")
-                    
+                    article["priority"]        = analysis.get("Priority", "Low")
+                    article["confidence"]      = analysis.get("Confidence", "High")
+
                     curated_articles.append(article)
                     log.info(f"    ✓ RELEVANT: {article['title'][:55]} -> Company={article['company']} | Priority={article['priority']}")
                 else:
@@ -339,9 +351,29 @@ def execute_pipeline(start_time: datetime, run_stats: dict) -> bool:
                 run_stats["errors"].append(f"Gemini thread error: {e}")
 
     if not curated_articles:
-        log.info("No relevant container glass developments found after AI analysis. Skipping report.")
-        run_stats["email_status"] = "Skipped (No News)"
-        return True
+        if os.environ.get("FORCE_SEND") == "true":
+            log.info("FORCE_SEND=true detected. Injecting test container glass article for validation.")
+            mock_article = {
+                "title": "PGP Glass Announces Capacity Expansion at Kosamba Plant",
+                "url": "https://www.pgpglass.com/test-article-expansion-2026",
+                "source": "PGP Glass Press Release",
+                "published": datetime.now(timezone.utc).isoformat(),
+                "raw_text": "PGP Glass Private Limited, a global leader in design, production, and decoration of premium glass packaging (bottles), today announced the commissioning of a new state-of-the-art furnace and expansion of container glass capacity at its Kosamba facility in Gujarat, India to meet the growing demand for perfume and cosmetics packaging.",
+                "company": "PGP Glass",
+                "country": "India",
+                "category": "🏭 New Factory / Expansion",
+                "summary": "PGP Glass has announced the expansion of container glass production capacity at its Kosamba plant in India, installing a new furnace to meet premium cosmetic and perfume packaging demands.",
+                "key_details": "• Location: Kosamba, Gujarat, India\n• Product segment: Cosmetics and perfume packaging\n• Equipment: New furnace installed",
+                "business_impact": "Increases capacity to serve global luxury and cosmetics packaging clients.",
+                "priority": "High",
+                "confidence": "High"
+            }
+            curated_articles.append(mock_article)
+            run_stats["gemini_accepted"] += 1
+        else:
+            log.info("No relevant container glass developments found after AI analysis. Skipping report.")
+            run_stats["email_status"] = "Skipped (No News)"
+            return True
 
     # 4b. Generate Daily Market Pulse Paragraph
     check_timeout(start_time, run_stats)
@@ -386,7 +418,7 @@ def main():
     load_env()
     start_time = datetime.now(timezone.utc)
     
-    _banner("PGP Container Glass Daily Intelligence Pipeline (Version 5.1)")
+    _banner("PGP Container Glass Daily Intelligence Pipeline (Version 5.2)")
     log.info(f"Started: {start_time.strftime('%Y-%m-%d %H:%M:%S UTC')}")
 
     # Standard run statistics dictionary

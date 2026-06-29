@@ -329,7 +329,9 @@
     "2e9509a785bb0e2d58669879e9314558ef14523901ce2afbc5fa70f70b57dfd9",
     "3a54743d965833060cd1004d2baec8d0bdfc3e603d1bbdf957ca51f2fbd1d641",
     "7b41663e9e6b9f53603c3894e02e470fae7b64466fcb56dd3bc70e1ec3d43fc0",
-    "1526b28a9c713c27665e8cf8642ad210ae8845d85a0aba208d8b1e9aeb3c047a"
+    "1526b28a9c713c27665e8cf8642ad210ae8845d85a0aba208d8b1e9aeb3c047a",
+    "1519f2bbb1ef4e3a190ac8ab16a2fab56364f3196aff3080050ad5e679f81a5f",
+    "f8d510e3b499d0ef1845619cd061b0df2ead0781f4eaf0ccc8e76c8f862f8204"
   ],
   "title_hashes": [
     "6ff369fac364e6ae0a5f4130d379ff4f7cee1bc2fb263f03fc3d4a5f40a9055f",
@@ -660,10 +662,12 @@
     "6a8659024e8ccadb88d45399f15238a343014c0fae83b53ef1953a9f8cbfdc58",
     "0ddbcbea359e0156221385b6db671ddc431211f40e72226d274599f992af6f4e",
     "c4269fc0e79a51e23876a6f12d0cb9726f10fdc8c14529841f09a4c2ea12b3aa",
-    "d049062a92b750e62956fec8bd3e381b2018b1dacdafc76e3d12f0e33036c6c0"
+    "d049062a92b750e62956fec8bd3e381b2018b1dacdafc76e3d12f0e33036c6c0",
+    "062f0493bac122db80ee9eebd5fa497df698d327bea05f2ae6609ed45c13fde2",
+    "dd276bd374fd4836aa64e21d7fca202086d9f7f251bb0d067565019557db1e27"
   ],
-  "last_run": "2026-06-26T04:29:35.411878+00:00",
-  "total_processed": 329,
+  "last_run": "2026-06-29T11:52:52.502289+00:00",
+  "total_processed": 331,
   "runs": [
     {
       "date": "2026-06-24",
@@ -679,6 +683,16 @@
       "date": "2026-06-26",
       "articles_sent": 3,
       "new_urls_added": 3
+    },
+    {
+      "date": "2026-06-29",
+      "articles_sent": 1,
+      "new_urls_added": 1
+    },
+    {
+      "date": "2026-06-29",
+      "articles_sent": 1,
+      "new_urls_added": 1
     }
   ]
 }

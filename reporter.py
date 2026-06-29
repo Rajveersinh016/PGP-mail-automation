@@ -63,6 +63,7 @@ def _build_html_email(articles: list[dict], report_date: str, market_pulse: str)
         company = a.get("company", "Unknown")
         country = a.get("country", "Unknown")
         summary = a.get("summary", a.get("title", ""))
+        key_details = a.get("key_details", "")
         source = a.get("source", "")
         pub_date = a.get("published", "")[:10] if a.get("published") else ""
         url = a.get("url", "#")
@@ -81,6 +82,22 @@ def _build_html_email(articles: list[dict], report_date: str, market_pulse: str)
             meta_html += f'<strong>Source:</strong> {source} &nbsp;|&nbsp; '
         if pub_date:
             meta_html += f'<strong>Date:</strong> {pub_date}'
+
+        # Build Key Details HTML — convert bullet lines to styled list items
+        key_details_html = ""
+        if key_details:
+            bullet_lines = [ln.strip().lstrip("•").strip() for ln in key_details.splitlines() if ln.strip()]
+            if bullet_lines:
+                items_html = "".join(
+                    f'<li style="margin:0 0 4px 0; font-size:12px; color:#1e3a5f; line-height:1.45; font-family:Arial,sans-serif;">'
+                    f'{line}</li>'
+                    for line in bullet_lines
+                )
+                key_details_html = f"""
+                  <div style="margin-top:8px; padding:10px 14px; background:#eef4ff; border-left:3px solid #3b82f6; border-radius:0 6px 6px 0;">
+                    <p style="margin:0 0 5px 0; font-size:10px; font-weight:700; color:#1e40af; text-transform:uppercase; letter-spacing:0.5px; font-family:Arial,sans-serif;">🔍 Key Details</p>
+                    <ul style="margin:0; padding-left:14px; list-style-type:disc;">{items_html}</ul>
+                  </div>"""
 
         cards_html += f"""
         <tr>
@@ -110,17 +127,21 @@ def _build_html_email(articles: list[dict], report_date: str, market_pulse: str)
                   <p style="margin:0 0 8px 0; font-size:11px; color:#64748b; font-family:Arial,sans-serif;">
                     {meta_html}
                   </p>
-                  <!-- Summary block -->
-                  <div style="background:#f8fafc; padding:12px 14px; border-left:3px solid #092f20; border-radius:0 6px 6px 0; margin-bottom:8px;">
+                  <!-- Executive Summary block -->
+                  <div style="background:#f8fafc; padding:12px 14px; border-left:3px solid #092f20; border-radius:0 6px 6px 0; margin-bottom:4px;">
+                    <p style="margin:0 0 4px 0; font-size:10px; font-weight:700; color:#0f5132; text-transform:uppercase; letter-spacing:0.5px; font-family:Arial,sans-serif;">📋 Executive Summary</p>
                     <p style="margin:0; font-size:13px; color:#334155; line-height:1.5; font-family:Arial,sans-serif;">
                       {summary}
                     </p>
-                    {f'''<p style="margin:8px 0 0 0; font-size:12px; color:#1e40af; line-height:1.5; font-family:Arial,sans-serif;">
-                      <strong>💼 Business Impact:</strong> {business_impact}
-                    </p>''' if business_impact else ''}
                   </div>
+                  <!-- Key Details block -->
+                  {key_details_html}
+                  <!-- Business Impact -->
+                  {f'''<p style="margin:8px 0 0 0; font-size:12px; color:#1e40af; line-height:1.5; font-family:Arial,sans-serif;">
+                    <strong>💼 Business Impact:</strong> {business_impact}
+                  </p>''' if business_impact else ''}
                   <!-- Link -->
-                  <a href="{url}" target="_blank" style="display:inline-block; font-size:11.5px; font-weight:600; color:#092f20; text-decoration:none; font-family:Arial,sans-serif;">
+                  <a href="{url}" target="_blank" style="display:inline-block; margin-top:8px; font-size:11.5px; font-weight:600; color:#092f20; text-decoration:none; font-family:Arial,sans-serif;">
                     Read Article →
                   </a>
                 </td>
@@ -228,7 +249,7 @@ def _build_excel(articles: list[dict]) -> str:
     ws.row_dimensions[1].height = 25
 
     headers = [
-        "Company", "Country", "Category", "Summary", 
+        "Company", "Country", "Category", "Executive Summary", "Key Details",
         "Business Impact", "Priority", "Confidence", "Source", "Published Date", "URL"
     ]
     ws.append(headers)
@@ -257,6 +278,7 @@ def _build_excel(articles: list[dict]) -> str:
             a.get("country", "Unknown"),
             a.get("category", "🌍 Industry Update"),
             a.get("summary", ""),
+            a.get("key_details", ""),
             a.get("business_impact", ""),
             a.get("priority", "Low"),
             a.get("confidence", "High"),
@@ -271,11 +293,11 @@ def _build_excel(articles: list[dict]) -> str:
             cell = ws.cell(row=i + 1, column=col_idx)
             cell.fill = row_fill
             cell.font = Font(name="Calibri", size=9)
-            # Wrap text for summaries, impacts, and URLs
-            cell.alignment = Alignment(vertical="top", wrap_text=(col_idx in (4, 5, 10)))
+            # Wrap text for summaries, key details, impacts, and URLs
+            cell.alignment = Alignment(vertical="top", wrap_text=(col_idx in (4, 5, 6, 11)))
 
-    # Set column widths
-    widths = [18, 14, 24, 50, 45, 12, 12, 18, 12, 25]
+    # Set column widths (added Key Details column)
+    widths = [18, 14, 24, 50, 50, 45, 12, 12, 18, 12, 25]
     for idx, w in enumerate(widths, 1):
         ws.column_dimensions[get_column_letter(idx)].width = w
 

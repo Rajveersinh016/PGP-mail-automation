@@ -83,7 +83,91 @@ def _safe_get(url: str, verify: bool = True) -> requests.Response | None:
         return None
 
 
+def fetch_full_article(url: str) -> str:
+    """
+    Fetch and clean the full article body from a URL.
+
+    Steps:
+    1. HTTP GET the article page.
+    2. Strip noise tags: nav, header, footer, script, style, aside, form, ads.
+    3. Find the main article container (article tag, role=main, common class names).
+    4. Extract clean plain text, collapse whitespace.
+    5. Return text truncated to 6000 characters (Gemini token budget).
+
+    Returns empty string on failure so callers can fall back to raw_text.
+    """
+    NOISE_TAGS = ["nav", "header", "footer", "script", "style", "aside", "form",
+                  "noscript", "iframe", "figure", "figcaption"]
+    NOISE_CLASSES = [
+        "ad", "ads", "advertisement", "sidebar", "side-bar", "widget",
+        "related", "related-articles", "recommended", "newsletter", "subscribe",
+        "social", "share", "comments", "comment", "breadcrumb", "pagination",
+        "cookie", "banner", "promo", "popup", "menu", "nav", "navigation",
+    ]
+    ARTICLE_SELECTORS = [
+        "article",
+        "[role='main']",
+        ".post-content",
+        ".article-body",
+        ".article-content",
+        ".entry-content",
+        ".story-body",
+        ".story-content",
+        ".content-body",
+        ".news-body",
+        ".article__body",
+        ".post-body",
+        "main",
+        "#main-content",
+        "#content",
+    ]
+    MAX_CHARS = 6000
+
+    resp = _safe_get(url)
+    if not resp:
+        return ""
+
+    try:
+        soup = BeautifulSoup(resp.text, "lxml")
+
+        # Remove noise tags entirely
+        for tag in soup.find_all(NOISE_TAGS):
+            tag.decompose()
+
+        # Remove elements with noise classes or IDs
+        for noise_cls in NOISE_CLASSES:
+            for tag in soup.find_all(class_=re.compile(noise_cls, re.IGNORECASE)):
+                tag.decompose()
+            for tag in soup.find_all(id=re.compile(noise_cls, re.IGNORECASE)):
+                tag.decompose()
+
+        # Find the best article container
+        container = None
+        for selector in ARTICLE_SELECTORS:
+            container = soup.select_one(selector)
+            if container:
+                break
+
+        # Fall back to body if nothing matched
+        if not container:
+            container = soup.find("body") or soup
+
+        # Extract clean text
+        text = container.get_text(separator="\n", strip=True)
+
+        # Collapse excessive blank lines
+        lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+        cleaned = "\n".join(lines)
+
+        return cleaned[:MAX_CHARS]
+
+    except Exception as e:
+        log.debug(f"fetch_full_article failed for {url}: {e}")
+        return ""
+
+
 def _generate_watchlist_queries(watchlist: dict) -> list[str]:
+
     """
     Construct optimized queries grouped by OR logic for every watchlist company.
     Combines company name + aliases with container glass industry context suffixes.
