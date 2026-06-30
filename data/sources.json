@@ -416,15 +416,108 @@
     "status": "active"
   },
   {
-    "name": "Packaging Insights Site Search",
-    "tier": 6,
-    "category": "Packaging Industry Publications",
+    "name": "Packaging Insights RSS",
+    "tier": 4,
+    "category": "Luxury Packaging Publications",
     "priority_type": "industry_magazine",
-    "scraping_method": "google_news",
+    "scraping_method": "rss",
     "web_url": "https://www.packaginginsights.com",
+    "rss_url": "https://resource.innovadatabase.com/rss/pinews.xml",
+    "scraping_config": {
+      "verify_ssl": true
+    },
+    "status": "active"
+  },
+  {
+    "name": "Packaging Insights — Glass Category",
+    "tier": 4,
+    "category": "Luxury Packaging Publications",
+    "priority_type": "industry_magazine",
+    "scraping_method": "html",
+    "web_url": "https://www.packaginginsights.com/news/category/glass.html",
     "rss_url": null,
     "scraping_config": {
-      "query": "site:packaginginsights.com \"glass bottle\" OR \"glass packaging\" OR \"container glass\""
+      "selector": "a.mustread-title, .articlelisttitle a, h2 a, h3 a, .newstitle a",
+      "verify_ssl": true
+    },
+    "status": "active"
+  },
+  {
+    "name": "Luxe Pack Monaco News",
+    "tier": 4,
+    "category": "Luxury Packaging Publications",
+    "priority_type": "industry_magazine",
+    "scraping_method": "google_news",
+    "web_url": "https://www.luxepackmonaco.com/en/new",
+    "rss_url": null,
+    "scraping_config": {
+      "query": "site:luxepackmonaco.com (\"glass\" OR \"bottle\" OR \"packaging\" OR \"perfume\" OR \"luxury\")"
+    },
+    "status": "active"
+  },
+  {
+    "name": "Inter Parfums Newsroom",
+    "tier": 4,
+    "category": "Luxury Packaging Publications",
+    "priority_type": "company_website",
+    "scraping_method": "html",
+    "web_url": "https://www.interparfums.fr/en/news/",
+    "rss_url": null,
+    "scraping_config": {
+      "selector": "article a, .news-item a, h2 a, h3 a, .post-title a, .entry-title a, a[href*='/news/']",
+      "verify_ssl": true
+    },
+    "status": "active"
+  },
+  {
+    "name": "Puig Newsroom",
+    "tier": 4,
+    "category": "Luxury Packaging Publications",
+    "priority_type": "company_website",
+    "scraping_method": "google_news",
+    "web_url": "https://www.puig.com/en/newsroom/",
+    "rss_url": null,
+    "scraping_config": {
+      "query": "site:puig.com (\"packaging\" OR \"bottle\" OR \"glass\" OR \"fragrance\" OR \"perfume\" OR \"acquisition\")"
+    },
+    "status": "active"
+  },
+  {
+    "name": "L'Oréal Mediaroom",
+    "tier": 4,
+    "category": "Luxury Packaging Publications",
+    "priority_type": "company_website",
+    "scraping_method": "google_news",
+    "web_url": "https://www.loreal.com/en/mediaroom/",
+    "rss_url": null,
+    "scraping_config": {
+      "query": "site:loreal.com (\"glass bottle\" OR \"glass packaging\" OR \"fragrance packaging\" OR \"perfume bottle\" OR \"luxury packaging\")"
+    },
+    "status": "active"
+  },
+  {
+    "name": "Estée Lauder Newsroom",
+    "tier": 4,
+    "category": "Luxury Packaging Publications",
+    "priority_type": "company_website",
+    "scraping_method": "google_news",
+    "web_url": "https://www.elcompanies.com/en/news-and-media/newsroom",
+    "rss_url": null,
+    "scraping_config": {
+      "query": "site:elcompanies.com (\"glass\" OR \"bottle\" OR \"packaging\" OR \"fragrance\" OR \"perfume\" OR \"sustainability\")"
+    },
+    "status": "active"
+  },
+  {
+    "name": "GlobeNewswire — Perfume & Luxury Glass",
+    "tier": 4,
+    "category": "Luxury Packaging Publications",
+    "priority_type": "press_release",
+    "scraping_method": "google_news",
+    "web_url": "https://www.globenewswire.com/en/search/tag/perfume",
+    "rss_url": null,
+    "scraping_config": {
+      "query": "site:globenewswire.com (\"glass bottle\" OR \"glass packaging\" OR \"perfume bottle\" OR \"fragrance packaging\" OR \"luxury packaging\" OR \"container glass\")"
     },
     "status": "active"
   },
