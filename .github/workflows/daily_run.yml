@@ -14,11 +14,17 @@ on:
         default: 'false'
         type: boolean
 
+# Prevent overlapping runs — if a previous run is still in progress when the
+# next schedule fires, the new run will wait (not cancel) the current one.
+concurrency:
+  group: daily-container-glass
+  cancel-in-progress: false
+
 jobs:
   intelligence-run:
     name: Daily Container Glass Intelligence Pipeline
     runs-on: ubuntu-latest
-    timeout-minutes: 10 # Graceful timeout boundary protection
+    timeout-minutes: 30 # Raised to 30 min to account for GitHub queue delay + pipeline
 
     # Required permission to commit processed_urls.json back to repo
     permissions:
@@ -31,27 +37,57 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # ── Step 2: Set up Python ────────────────────────────────────────────
+      # ── Step 2: Print Timing Info (before pipeline) ───────────────────────
+      - name: Print Run Timing Info
+        run: |
+          echo "════════════════════════════════════════════════════════"
+          echo "  PGP Glass Intelligence — Run Timing Diagnostics"
+          echo "════════════════════════════════════════════════════════"
+          echo ""
+          echo "  Scheduled cron   : 30 3 * * *  (3:30 AM UTC = 9:00 AM IST)"
+          echo "  Run created at   : ${{ github.run_created_at }}"
+          echo "  Current UTC time : $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "  Current IST time : $(TZ='Asia/Kolkata' date '+%Y-%m-%d %H:%M:%S IST')"
+          echo ""
+          echo "  NOTE: GitHub-hosted runners do not guarantee exact cron"
+          echo "  timing. Delays of 30 min to several hours are normal"
+          echo "  under high load. For exact 9:00 AM IST delivery, use a"
+          echo "  dedicated VPS or self-hosted runner instead."
+          echo "════════════════════════════════════════════════════════"
+
+      # ── Step 3: Set up Python ────────────────────────────────────────────
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      # ── Step 3: Install dependencies ─────────────────────────────────────
+      # ── Step 4: Install dependencies ─────────────────────────────────────
       - name: Install Python Dependencies
         run: pip install -r requirements.txt
 
-      # ── Step 4: Run intelligence pipeline ───────────────────────────────
+      # ── Step 5: Run intelligence pipeline ───────────────────────────────
       - name: Run Container Glass Intelligence Pipeline
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           RECIPIENTS: ${{ secrets.RECIPIENTS }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Pass GitHub run metadata into Python for queue-delay calculation
+          GITHUB_RUN_CREATED_AT: ${{ github.run_created_at }}
         run: python main.py
 
-      # ── Step 5: Commit updated state files ───────────────────────────────
+      # ── Step 6: Print Finish Timestamp ────────────────────────────────────
+      - name: Print Finish Timestamp
+        if: always()
+        run: |
+          echo "════════════════════════════════════════════════════════"
+          echo "  Pipeline finished"
+          echo "  Finish UTC time  : $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "  Finish IST time  : $(TZ='Asia/Kolkata' date '+%Y-%m-%d %H:%M:%S IST')"
+          echo "════════════════════════════════════════════════════════"
+
+      # ── Step 7: Commit updated state files ───────────────────────────────
       - name: Commit Updated State Files
         if: always()
         run: |
@@ -64,7 +100,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # ── Step 6: Upload execution logs as artifacts ──────────────────────
+      # ── Step 8: Upload execution logs as artifacts ──────────────────────
       - name: Upload Run Logs
         if: always()
         uses: actions/upload-artifact@v4
