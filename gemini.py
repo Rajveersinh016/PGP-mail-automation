@@ -183,6 +183,8 @@ def _call_gemini(prompt: str, api_key: str, timeout: int = 30) -> dict | None:
                     result = resp.json()
                     text = result["candidates"][0]["content"]["parts"][0]["text"]
                     return json.loads(text)
+                else:
+                    resp_text = resp.text
             except Exception as e:
                 resp_err = e
 
@@ -190,14 +192,15 @@ def _call_gemini(prompt: str, api_key: str, timeout: int = 30) -> dict | None:
         if status_code == 429:
             with gemini_lock:
                 cooldown_until = time.time() + 62.0
-            log.warning(f"Gemini API rate limited (429). Triggering 62-second cooldown... (attempt {attempt+1}/5)")
+            err_msg = resp_text if 'resp_text' in locals() else "No response body"
+            log.warning(f"Gemini API rate limited (429). Response: {err_msg}. Triggering 62-second cooldown... (attempt {attempt+1}/5)")
             time.sleep(62.0)
             continue
         elif resp_err:
             log.warning(f"Gemini API call attempt {attempt+1} failed: {resp_err}")
             time.sleep(2.0)
         else:
-            log.warning(f"Gemini API call attempt {attempt+1} failed with status code {status_code}")
+            log.warning(f"Gemini API call attempt {attempt+1} failed with status code {status_code}. Response: {resp_text if 'resp_text' in locals() else ''}")
             time.sleep(2.0)
 
     return None
@@ -215,11 +218,15 @@ def analyze_article(article: dict) -> dict | None:
         log.error("GEMINI_API_KEY environment variable is missing. Cannot perform AI analysis.")
         raise ValueError("GEMINI_API_KEY is not set.")
 
+    raw_text = article.get("raw_text", "")
+    if len(raw_text) > 6000:
+        raw_text = raw_text[:6000] + "\n[Text truncated for length...]"
+
     prompt = PROMPT_TEMPLATE.format(
         title=article.get("title", ""),
         source=article.get("source", ""),
         url=article.get("url", ""),
-        raw_text=article.get("raw_text", "")
+        raw_text=raw_text
     )
 
     # First attempt
