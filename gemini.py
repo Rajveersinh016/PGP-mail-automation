@@ -156,7 +156,10 @@ def _call_gemini(prompt: str, api_key: str, timeout: int = 30) -> dict | None:
     headers = {"Content-Type": "application/json"}
 
     for attempt in range(5):
-        # Client-side rate limiting (max 10 requests per minute, spacing calls by >= 6.0 seconds)
+        status_code = -1
+        resp_err = None
+
+        # We wrap the spacing logic and HTTP request inside the lock to enforce strict serialization
         with gemini_lock:
             now = time.time()
             elapsed = now - last_call_time
@@ -164,25 +167,28 @@ def _call_gemini(prompt: str, api_key: str, timeout: int = 30) -> dict | None:
                 time.sleep(6.0 - elapsed)
             last_call_time = time.time()
 
-        try:
-            resp = requests.post(url, json=payload, headers=headers, timeout=timeout)
-            if resp.status_code == 429:
-                import random
-                sleep_time = 15 + random.uniform(2.0, 6.0)
-                log.warning(f"Gemini API rate limited (429). Retrying in {sleep_time:.1f} seconds (attempt {attempt+1}/5)...")
-                time.sleep(sleep_time)
-                continue
+            try:
+                resp = requests.post(url, json=payload, headers=headers, timeout=timeout)
+                status_code = resp.status_code
+                if status_code == 200:
+                    result = resp.json()
+                    text = result["candidates"][0]["content"]["parts"][0]["text"]
+                    return json.loads(text)
+            except Exception as e:
+                resp_err = e
 
-            resp.raise_for_status()
-            result = resp.json()
-            text = result["candidates"][0]["content"]["parts"][0]["text"]
-            return json.loads(text)
-
-        except json.JSONDecodeError as e:
-            log.warning(f"Gemini JSON parse error on attempt {attempt+1}: {e}")
+        # Handle retries and non-200 responses outside the lock so other threads are not blocked
+        if status_code == 429:
+            import random
+            sleep_time = 15 + random.uniform(2.0, 6.0)
+            log.warning(f"Gemini API rate limited (429). Retrying in {sleep_time:.1f} seconds (attempt {attempt+1}/5)...")
+            time.sleep(sleep_time)
+            continue
+        elif resp_err:
+            log.warning(f"Gemini API call attempt {attempt+1} failed: {resp_err}")
             time.sleep(2.0)
-        except Exception as e:
-            log.warning(f"Gemini API call attempt {attempt+1} failed: {e}")
+        else:
+            log.warning(f"Gemini API call attempt {attempt+1} failed with status code {status_code}")
             time.sleep(2.0)
 
     return None
