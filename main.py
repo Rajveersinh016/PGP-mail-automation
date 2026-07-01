@@ -577,7 +577,7 @@ def main():
     start_time = datetime.now(timezone.utc)
     start_local_str, log_filepath = setup_file_logging(start_time)
 
-    _banner("PGP Container Glass Daily Intelligence Pipeline (Version 6.0)")
+    _banner("PGP Container Glass Weekly Intelligence Pipeline (Version 6.0)")
     log.info(f"  Workflow Start (UTC) : {_ts(start_time)}")
     log.info(f"  Workflow Start (IST) : {_ts(start_time, IST)}")
     log.info(f"  Scheduled cron      : 30 3 * * *  (3:30 AM UTC = 9:00 AM IST)")

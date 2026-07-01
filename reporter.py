@@ -6,7 +6,7 @@ Generates a simplified, professional HTML email report with Market Pulse, metric
 import logging
 import os
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -30,10 +30,33 @@ CATEGORY_BADGES = {
 }
 
 
+def get_reporting_period_str(start_dt: datetime, end_dt: datetime) -> str:
+    start_day = start_dt.strftime("%d")
+    start_month = start_dt.strftime("%B")
+    start_year = start_dt.strftime("%Y")
+    
+    end_day = end_dt.strftime("%d")
+    end_month = end_dt.strftime("%B")
+    end_year = end_dt.strftime("%Y")
+    
+    if start_year != end_year:
+        return f"{start_day} {start_month} {start_year} – {end_day} {end_month} {end_year}"
+    elif start_month != end_month:
+        return f"{start_day} {start_month} – {end_day} {end_month} {end_year}"
+    else:
+        return f"{start_day} – {end_day} {start_month} {end_year}"
+
+
 def _build_html_email(articles: list[dict], report_date: str, market_pulse: str) -> str:
     """Build a clean, executive HTML email body."""
     total = len(articles)
     cards_html = ""
+
+    # Calculate IST reporting period
+    IST = timezone(timedelta(hours=5, minutes=30))
+    end_dt = datetime.now(IST)
+    start_dt = end_dt - timedelta(days=6)
+    reporting_period = get_reporting_period_str(start_dt, end_dt)
 
     # Calculate metrics
     companies_set = {a.get("company", "Unknown") for a in articles} - {"Unknown"}
@@ -44,17 +67,9 @@ def _build_html_email(articles: list[dict], report_date: str, market_pulse: str)
     countries_count = len(countries_set)
     countries_str = ", ".join(sorted(countries_set)) if countries_set else "None"
 
-    # Category counts
-    cat_counts = {}
-    for a in articles:
-        cat = a.get("category", "🌍 Industry Update")
-        cat_counts[cat] = cat_counts.get(cat, 0) + 1
-    
-    cat_breakdown_items = []
-    for cat, count in sorted(cat_counts.items(), key=lambda x: x[1], reverse=True):
-        emoji = CATEGORY_BADGES.get(cat, {}).get("emoji", "🌍")
-        cat_breakdown_items.append(f"{emoji} {cat.replace(emoji, '').strip()}: {count}")
-    cat_breakdown_str = " &nbsp;·&nbsp; ".join(cat_breakdown_items)
+    categories_set = {a.get("category", "🌍 Industry Update") for a in articles}
+    categories_count = len(categories_set)
+    categories_list_str = ", ".join(sorted(categories_set)) if categories_set else "None"
 
     for a in articles:
         cat = a.get("category", "🌍 Industry Update")
@@ -171,40 +186,25 @@ def _build_html_email(articles: list[dict], report_date: str, market_pulse: str)
               <h1 style="margin:0; font-size:22px; font-weight:700; color:#ffffff; font-family:Arial,sans-serif;">
                 Weekly Executive Report
               </h1>
-              <p style="margin:4px 0 0 0; font-size:12px; color:#93c5fd; font-family:Arial,sans-serif;">
-                {report_date} &nbsp;·&nbsp; {total} Curated Industry Updates
-              </p>
             </td>
           </tr>
           <!-- Body -->
           <tr>
             <td style="padding:20px 30px 30px 30px;">
-
-              <!-- Pulse Stats Dashboard -->
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:15px;">
-                <tr>
-                  <td width="32%" align="center" style="background:#f8fafc; padding:14px; border-radius:6px; border:1px solid #e2e8f0;">
-                    <span style="font-size:24px; font-weight:700; color:#092f20;">{total}</span><br>
-                    <span style="font-size:9.5px; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Relevant News</span>
-                  </td>
-                  <td width="2%"></td>
-                  <td width="32%" align="center" style="background:#f8fafc; padding:14px; border-radius:6px; border:1px solid #e2e8f0;">
-                    <span style="font-size:24px; font-weight:700; color:#092f20;">{companies_count}</span><br>
-                    <span style="font-size:9.5px; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Companies</span>
-                  </td>
-                  <td width="2%"></td>
-                  <td width="32%" align="center" style="background:#f8fafc; padding:14px; border-radius:6px; border:1px solid #e2e8f0;">
-                    <span style="font-size:24px; font-weight:700; color:#092f20;">{countries_count}</span><br>
-                    <span style="font-size:9.5px; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Countries</span>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Dashboard Details -->
-              <div style="background:#f8fafc; padding:12px 15px; border-radius:6px; border:1px solid #e2e8f0; margin-bottom:20px; font-size:11.5px; font-family:Arial,sans-serif; color:#334155; line-height:1.6;">
-                <div style="margin-bottom:4px;"><strong>🏢 Monitored Companies:</strong> {companies_str}</div>
-                <div style="margin-bottom:4px;"><strong>🌍 Geographies Impacted:</strong> {countries_str}</div>
-                <div><strong>📊 Category Spans:</strong> <span style="color:#475569;">{cat_breakdown_str}</span></div>
+              <!-- Summary Details Card -->
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:20px; margin-bottom:24px; font-family:Arial,sans-serif; color:#334155; line-height:1.6;">
+                <div style="margin-bottom:12px;">
+                  <span style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; display:block;">Reporting Period</span>
+                  <span style="font-size:16px; font-weight:700; color:#0f172a; display:block; margin-top:2px;">{reporting_period}</span>
+                </div>
+                <div style="border-top:1px solid #e2e8f0; padding-top:12px;">
+                  <ul style="margin:0; padding-left:16px; font-size:13px; list-style-type:disc;">
+                    <li style="margin-bottom:6px;"><strong>Total Relevant Articles:</strong> {total} curated updates</li>
+                    <li style="margin-bottom:6px;"><strong>Countries Covered:</strong> {countries_count} ({countries_str})</li>
+                    <li style="margin-bottom:6px;"><strong>Companies Covered:</strong> {companies_count} ({companies_str})</li>
+                    <li style="margin-bottom:0;"><strong>Categories Covered:</strong> {categories_count} ({categories_list_str})</li>
+                  </ul>
+                </div>
               </div>
 
               <!-- Curated Articles Divider -->

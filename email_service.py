@@ -13,7 +13,7 @@ import logging
 import os
 import smtplib
 import ssl
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
@@ -60,11 +60,27 @@ def send_email(html_body: str, excel_path: str, article_count: int) -> bool:
     log.info(f"  Sending to {len(recipients)} recipient(s): {', '.join(recipients)}")
 
     # ── Build message ─────────────────────────────────────────────────────
-    now_utc = datetime.now(timezone.utc)
-    report_date = now_utc.strftime("%B %d, %Y")
+    IST = timezone(timedelta(hours=5, minutes=30))
+    end_dt = datetime.now(IST)
+    start_dt = end_dt - timedelta(days=6)
+
+    start_day = start_dt.strftime("%d")
+    start_month = start_dt.strftime("%B")
+    start_year = start_dt.strftime("%Y")
+
+    end_day = end_dt.strftime("%d")
+    end_month = end_dt.strftime("%B")
+    end_year = end_dt.strftime("%Y")
+
+    if start_year != end_year:
+        reporting_period = f"{start_day} {start_month} {start_year} – {end_day} {end_month} {end_year}"
+    elif start_month != end_month:
+        reporting_period = f"{start_day} {start_month} – {end_day} {end_month} {end_year}"
+    else:
+        reporting_period = f"{start_day} – {end_day} {start_month} {end_year}"
 
     # Use ASCII-safe subject (avoid em-dash and special unicode which triggers spam filters)
-    subject = f"PGP Container Glass Weekly Intelligence Report | {report_date} | {article_count} New Updates"
+    subject = f"Weekly Container Glass Intelligence Report ({reporting_period})"
 
     msg = MIMEMultipart("mixed")
 
@@ -96,7 +112,7 @@ def send_email(html_body: str, excel_path: str, article_count: int) -> bool:
     plain_text = (
         f"PGP Container Glass Intelligence Platform - Weekly Intelligence Report\n"
         f"{'=' * 60}\n\n"
-        f"Date: {report_date}\n"
+        f"Reporting Period: {reporting_period}\n"
         f"New updates found: {article_count}\n\n"
         f"This report contains {article_count} new container glass industry developments\n"
         f"and strategic customer insights worldwide, ranked by importance.\n\n"
