@@ -22,6 +22,32 @@ if %errorlevel% equ 0 (
     goto python_found
 )
 
+:: Try common local user installations if not on PATH
+if exist "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" (
+    set PYTHON_CMD="%LOCALAPPDATA%\Programs\Python\Python313\python.exe"
+    goto python_found
+)
+if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" (
+    set PYTHON_CMD="%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
+    goto python_found
+)
+if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" (
+    set PYTHON_CMD="%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
+    goto python_found
+)
+if exist "C:\Program Files\Python313\python.exe" (
+    set PYTHON_CMD="C:\Program Files\Python313\python.exe"
+    goto python_found
+)
+if exist "C:\Program Files\Python312\python.exe" (
+    set PYTHON_CMD="C:\Program Files\Python312\python.exe"
+    goto python_found
+)
+if exist "C:\Program Files\Python311\python.exe" (
+    set PYTHON_CMD="C:\Program Files\Python311\python.exe"
+    goto python_found
+)
+
 :python_found
 if "%PYTHON_CMD%"=="" (
     echo Python is not installed.

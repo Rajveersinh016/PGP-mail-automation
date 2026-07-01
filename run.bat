@@ -13,6 +13,16 @@ if exist ".venv\Scripts\activate.bat" (
 :: 3. Detect Python executable
 set PYTHON_CMD=
 
+:: Direct check for virtual environment python
+if exist ".venv\Scripts\python.exe" (
+    set PYTHON_CMD=.venv\Scripts\python.exe
+    goto python_found
+)
+if exist "venv\Scripts\python.exe" (
+    set PYTHON_CMD=venv\Scripts\python.exe
+    goto python_found
+)
+
 where python >nul 2>nul
 if %errorlevel% equ 0 (
     set PYTHON_CMD=python
@@ -28,6 +38,20 @@ if %errorlevel% equ 0 (
 where python3 >nul 2>nul
 if %errorlevel% equ 0 (
     set PYTHON_CMD=python3
+    goto python_found
+)
+
+:: Try common local user installations if not on PATH
+if exist "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" (
+    set PYTHON_CMD="%LOCALAPPDATA%\Programs\Python\Python313\python.exe"
+    goto python_found
+)
+if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" (
+    set PYTHON_CMD="%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
+    goto python_found
+)
+if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" (
+    set PYTHON_CMD="%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
     goto python_found
 )
 
