@@ -155,21 +155,21 @@ def _call_gemini(prompt: str, api_key: str, timeout: int = 30) -> dict | None:
     }
     headers = {"Content-Type": "application/json"}
 
-    for attempt in range(3):
-        # Client-side rate limiting (max 14 requests per minute, spacing calls by >= 4.3 seconds)
+    for attempt in range(5):
+        # Client-side rate limiting (max 10 requests per minute, spacing calls by >= 6.0 seconds)
         with gemini_lock:
             now = time.time()
             elapsed = now - last_call_time
-            if elapsed < 4.3:
-                time.sleep(4.3 - elapsed)
+            if elapsed < 6.0:
+                time.sleep(6.0 - elapsed)
             last_call_time = time.time()
 
         try:
             resp = requests.post(url, json=payload, headers=headers, timeout=timeout)
             if resp.status_code == 429:
                 import random
-                sleep_time = 8 + random.uniform(1.0, 4.0)
-                log.warning(f"Gemini API rate limited (429). Retrying in {sleep_time:.1f} seconds...")
+                sleep_time = 15 + random.uniform(2.0, 6.0)
+                log.warning(f"Gemini API rate limited (429). Retrying in {sleep_time:.1f} seconds (attempt {attempt+1}/5)...")
                 time.sleep(sleep_time)
                 continue
 
