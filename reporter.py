@@ -169,7 +169,7 @@ def _build_html_email(articles: list[dict], report_date: str, market_pulse: str)
                 GLOBAL CONTAINER GLASS MARKET INTELLIGENCE PLATFORM
               </p>
               <h1 style="margin:0; font-size:22px; font-weight:700; color:#ffffff; font-family:Arial,sans-serif;">
-                Daily Executive Report
+                Weekly Executive Report
               </h1>
               <p style="margin:4px 0 0 0; font-size:12px; color:#93c5fd; font-family:Arial,sans-serif;">
                 {report_date} &nbsp;·&nbsp; {total} Curated Industry Updates
@@ -179,13 +179,6 @@ def _build_html_email(articles: list[dict], report_date: str, market_pulse: str)
           <!-- Body -->
           <tr>
             <td style="padding:20px 30px 30px 30px;">
-              <!-- Market Pulse Paragraph -->
-              <div style="background:#f0fdf4; border-left:4px solid #10b981; padding:15px; margin-bottom:20px; border-radius:4px;">
-                <h3 style="margin:0 0 6px 0; color:#0f2f20; font-family:Arial,sans-serif; font-size:13.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;">📈 Market Pulse</h3>
-                <p style="margin:0; font-size:13px; color:#1e293b; line-height:1.55; font-family:Arial,sans-serif;">
-                  {market_pulse}
-                </p>
-              </div>
 
               <!-- Pulse Stats Dashboard -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:15px;">

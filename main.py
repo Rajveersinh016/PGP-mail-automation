@@ -237,12 +237,12 @@ def load_context_keywords() -> list[str]:
 
 def local_pre_filter(articles: list[dict], watchlist: dict, context_keywords: list[str]) -> list[dict]:
     """
-    Keep only articles published in the last 24h that contain 
+    Keep only articles published in the last 7 days that contain 
     at least one watchlist company or alias AND at least one context keyword.
     """
     filtered = []
     now = datetime.now(timezone.utc)
-    date_limit = now - timedelta(hours=24)
+    date_limit = now - timedelta(days=7)
     
     # Compile company name and alias patterns
     company_patterns = []
@@ -257,7 +257,7 @@ def local_pre_filter(articles: list[dict], watchlist: dict, context_keywords: li
     # Compile context keywords patterns
     context_patterns = [re.compile(rf"\b{re.escape(w)}\b", re.IGNORECASE) for w in context_keywords]
 
-    log.info(f"Applying local filter (24h limit, {len(company_patterns)} company terms, {len(context_patterns)} context keywords)...")
+    log.info(f"Applying local filter (7 days limit, {len(company_patterns)} company terms, {len(context_patterns)} context keywords)...")
 
     for a in articles:
         # Check publication date
@@ -527,11 +527,8 @@ def execute_pipeline(start_time: datetime, run_stats: dict) -> bool:
             run_stats["email_status"] = "Skipped (No News)"
             return True
 
-    # ── 4b. Generate Daily Market Pulse Paragraph ──────────────────────────
-    check_timeout(start_time, run_stats)
-    log.info("Generating cohesive daily Market Pulse summary...")
-    with _stage_timer("Market Pulse Generation", stage_timings):
-        market_pulse = generate_market_pulse(curated_articles)
+    # ── 4b. Generate Weekly Market Pulse Paragraph (Disabled as requested) ──
+    market_pulse = ""
 
     # ── 5. Report & Email ─────────────────────────────────────────────────
     check_timeout(start_time, run_stats)

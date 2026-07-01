@@ -64,7 +64,7 @@ def send_email(html_body: str, excel_path: str, article_count: int) -> bool:
     report_date = now_utc.strftime("%B %d, %Y")
 
     # Use ASCII-safe subject (avoid em-dash and special unicode which triggers spam filters)
-    subject = f"PGP Container Glass Intelligence Report | {report_date} | {article_count} New Updates"
+    subject = f"PGP Container Glass Weekly Intelligence Report | {report_date} | {article_count} New Updates"
 
     msg = MIMEMultipart("mixed")
 
@@ -94,10 +94,10 @@ def send_email(html_body: str, excel_path: str, article_count: int) -> bool:
 
     # Plain text fallback (important — emails without plain text version get spam-flagged)
     plain_text = (
-        f"PGP Container Glass Intelligence Platform - Daily Intelligence Report\n"
+        f"PGP Container Glass Intelligence Platform - Weekly Intelligence Report\n"
         f"{'=' * 60}\n\n"
         f"Date: {report_date}\n"
-        f"New updates found today: {article_count}\n\n"
+        f"New updates found: {article_count}\n\n"
         f"This report contains {article_count} new container glass industry developments\n"
         f"and strategic customer insights worldwide, ranked by importance.\n\n"
         f"Please view this email in an HTML-capable email client for the\n"
@@ -108,7 +108,7 @@ def send_email(html_body: str, excel_path: str, article_count: int) -> bool:
         f"- Category breakdown\n"
         f"- Source coverage statistics\n\n"
         f"{'=' * 60}\n"
-        f"This report is automatically generated daily at 8:00 AM IST.\n"
+        f"This report is automatically generated weekly.\n"
         f"Powered by PGP Glass Intelligence Engine.\n"
         f"To unsubscribe, reply with 'unsubscribe' in the subject line.\n"
     )
