@@ -16,3 +16,12 @@ __pycache__/
 
 # Run statistics logs
 logs/
+
+# Virtual environments
+.venv/
+venv/
+
+# Local runtime directories
+temp/
+reports/
+output/

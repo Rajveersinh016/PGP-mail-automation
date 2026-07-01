@@ -1,11 +1,7 @@
 name: PGP Container Glass Intelligence — Daily Run
 
 on:
-  schedule:
-    # 9:00 AM IST = 3:30 AM UTC (IST is UTC+5:30)
-    - cron: '30 3 * * *'
-
-  # Allow manual trigger from GitHub Actions UI
+  # Allow manual trigger from GitHub Actions UI (automatic scheduling disabled in favor of Windows Task Scheduler)
   workflow_dispatch:
     inputs:
       debug_mode:

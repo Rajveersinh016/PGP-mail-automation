@@ -301,10 +301,14 @@ def _build_excel(articles: list[dict]) -> str:
     for idx, w in enumerate(widths, 1):
         ws.column_dimensions[get_column_letter(idx)].width = w
 
-    # Save to temp file
+    # Save to local temp directory relative to the project directory
+    project_dir = os.path.dirname(os.path.abspath(__file__))
+    temp_dir = os.path.join(project_dir, "temp")
+    os.makedirs(temp_dir, exist_ok=True)
+
     date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
     filename = f"container_glass_report_{date_str}.xlsx"
-    excel_path = os.path.join(tempfile.gettempdir(), filename)
+    excel_path = os.path.join(temp_dir, filename)
     wb.save(excel_path)
     return excel_path
 

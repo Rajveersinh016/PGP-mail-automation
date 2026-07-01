@@ -59,6 +59,67 @@ def _ts(dt: datetime | None = None, tz: timezone = timezone.utc) -> str:
     return d.strftime(f"%Y-%m-%d %H:%M:%S {label}")
 
 
+def ensure_directories():
+    """Ensure required runtime directories exist."""
+    base_dir = Path(__file__).parent
+    for folder in ["logs", "reports", "temp", "output"]:
+        (base_dir / folder).mkdir(exist_ok=True)
+
+
+def setup_file_logging(start_time: datetime):
+    """Set up file logging to logs/YYYY-MM-DD_HH-MM-SS.log using local machine time."""
+    local_time = start_time.astimezone()
+    filename = local_time.strftime("%Y-%m-%d_%H-%M-%S.log")
+    log_filepath = LOGS_DIR / filename
+
+    # Ensure logs directory exists
+    LOGS_DIR.mkdir(exist_ok=True)
+
+    file_handler = logging.FileHandler(log_filepath, encoding="utf-8")
+    file_handler.setFormatter(logging.Formatter("%(asctime)s  %(message)s", datefmt="%Y-%m-%d %H:%M:%S"))
+    logging.getLogger().addHandler(file_handler)
+
+    return local_time.strftime("%Y-%m-%d %H:%M:%S"), log_filepath
+
+
+def write_log_summary(run_stats: dict, exit_code: int):
+    """Write standard execution summary block to log file and stdout."""
+    end_time = datetime.now()
+
+    # Format times in local timezone
+    start_local = run_stats.get("start_local_str", "N/A")
+    end_local = end_time.strftime("%Y-%m-%d %H:%M:%S")
+
+    elapsed = run_stats.get("execution_time_seconds", 0.0)
+    if elapsed == 0.0:
+        try:
+            start_utc = datetime.fromisoformat(run_stats["run_time"])
+            elapsed = (datetime.now(timezone.utc) - start_utc).total_seconds()
+        except Exception:
+            elapsed = 0.0
+
+    errors_str = "None"
+    if run_stats.get("errors"):
+        errors_str = "; ".join(str(e) for e in run_stats["errors"])
+
+    summary_text = (
+        "\n"
+        "============================================================\n"
+        "EXECUTION SUMMARY\n"
+        "============================================================\n"
+        f"Start Time:        {start_local}\n"
+        f"End Time:          {end_local}\n"
+        f"Execution Time:    {elapsed:.1f} seconds\n"
+        f"Articles Scraped:  {run_stats.get('articles_collected', 0)}\n"
+        f"Relevant Articles: {run_stats.get('gemini_accepted', 0)}\n"
+        f"Email Status:      {run_stats.get('email_status', 'Pending')}\n"
+        f"Errors:            {errors_str}\n"
+        f"Exit Code:         {exit_code}\n"
+        "============================================================\n"
+    )
+    log.info(summary_text)
+
+
 @contextmanager
 def _stage_timer(label: str, stage_timings: dict):
     """Context manager that measures wall-clock time for a pipeline stage."""
@@ -237,6 +298,7 @@ def check_timeout(start_time: datetime, run_stats: dict):
         run_stats["execution_time_seconds"] = elapsed
         save_run_log(run_stats)
         write_github_summary(run_stats)
+        write_log_summary(run_stats, exit_code=1)
         sys.exit(1)
 
 
@@ -513,11 +575,12 @@ def execute_pipeline(start_time: datetime, run_stats: dict) -> bool:
 
 
 def main():
+    ensure_directories()
     load_env()
     start_time = datetime.now(timezone.utc)
-    start_ist  = start_time.astimezone(IST)
+    start_local_str, log_filepath = setup_file_logging(start_time)
 
-    _banner("PGP Container Glass Daily Intelligence Pipeline (Version 5.3)")
+    _banner("PGP Container Glass Daily Intelligence Pipeline (Version 6.0)")
     log.info(f"  Workflow Start (UTC) : {_ts(start_time)}")
     log.info(f"  Workflow Start (IST) : {_ts(start_time, IST)}")
     log.info(f"  Scheduled cron      : 30 3 * * *  (3:30 AM UTC = 9:00 AM IST)")
@@ -529,6 +592,7 @@ def main():
         "run_time": start_time.isoformat(),
         "run_time_utc": _ts(start_time),
         "run_time_ist": _ts(start_time, IST),
+        "start_local_str": start_local_str,
         "execution_time_seconds": 0.0,
         "stage_timings": {},
         "sources_checked": [],
@@ -543,71 +607,85 @@ def main():
         "errors": []
     }
 
-    # Prerequisite Health Check
     try:
-        with _stage_timer("Health Check", run_stats["stage_timings"]):
-            health_check()
-    except Exception as e:
-        err_msg = f"Pre-flight health check failed: {e}"
-        log.error(f"✗ {err_msg}")
-        run_stats["errors"].append(err_msg)
-        run_stats["email_status"] = "Skipped (Health Check Failed)"
-        run_stats["execution_time_seconds"] = (datetime.now(timezone.utc) - start_time).total_seconds()
-        save_run_log(run_stats)
-        write_github_summary(run_stats)
-        sys.exit(1)
-
-    max_retries = 3
-    retry_delay = 10  # Reduced from 30s — saves up to 40s across two retries
-    success = False
-
-    for attempt in range(1, max_retries + 1):
-        if attempt > 1:
-            log.info(f"Sleeping for {retry_delay} seconds before retry attempt {attempt}...")
-            time.sleep(retry_delay)
-            # Reset per-attempt statistics
-            run_stats["errors"] = []
-            run_stats["duplicates_removed"] = 0
-            run_stats["gemini_accepted"] = 0
-            run_stats["gemini_rejected"] = 0
-
-        log.info(f"Pipeline Execution Attempt {attempt}/{max_retries}")
-
+        # Prerequisite Health Check
         try:
-            success = execute_pipeline(start_time, run_stats)
-            if success:
-                break
+            with _stage_timer("Health Check", run_stats["stage_timings"]):
+                health_check()
         except Exception as e:
-            err_msg = f"Pipeline execution failed on attempt {attempt}: {e}"
+            err_msg = f"Pre-flight health check failed: {e}"
             log.error(f"✗ {err_msg}")
             run_stats["errors"].append(err_msg)
+            run_stats["email_status"] = "Skipped (Health Check Failed)"
+            run_stats["execution_time_seconds"] = (datetime.now(timezone.utc) - start_time).total_seconds()
+            save_run_log(run_stats)
+            write_github_summary(run_stats)
+            write_log_summary(run_stats, exit_code=1)
+            sys.exit(1)
 
-    # ── Wrap up ───────────────────────────────────────────────────────────
-    finish_time = datetime.now(timezone.utc)
-    elapsed = (finish_time - start_time).total_seconds()
-    run_stats["execution_time_seconds"] = elapsed
-    run_stats["finish_time_utc"] = _ts(finish_time)
-    run_stats["finish_time_ist"] = _ts(finish_time, IST)
+        max_retries = 3
+        retry_delay = 10  # Reduced from 30s — saves up to 40s across two retries
+        success = False
 
-    # Save statistics JSON
-    save_run_log(run_stats)
+        for attempt in range(1, max_retries + 1):
+            if attempt > 1:
+                log.info(f"Sleeping for {retry_delay} seconds before retry attempt {attempt}...")
+                time.sleep(retry_delay)
+                # Reset per-attempt statistics
+                run_stats["errors"] = []
+                run_stats["duplicates_removed"] = 0
+                run_stats["gemini_accepted"] = 0
+                run_stats["gemini_rejected"] = 0
 
-    # Write GitHub Summary
-    write_github_summary(run_stats)
+            log.info(f"Pipeline Execution Attempt {attempt}/{max_retries}")
 
-    # ── Completion banner ──────────────────────────────────────────────────
-    _banner(f"DONE — Run completed in {elapsed:.1f}s")
-    log.info(f"  Script Start  (UTC) : {_ts(start_time)}")
-    log.info(f"  Script Start  (IST) : {_ts(start_time, IST)}")
-    log.info(f"  Script Finish (UTC) : {_ts(finish_time)}")
-    log.info(f"  Script Finish (IST) : {_ts(finish_time, IST)}")
-    if run_stats.get("email_sent_time"):
-        log.info(f"  Email Sent    (UTC) : {run_stats['email_sent_time']}")
-    log.info(f"  Total Duration      : {elapsed:.1f}s")
-    log.info("─" * 60)
+            try:
+                success = execute_pipeline(start_time, run_stats)
+                if success:
+                    break
+            except Exception as e:
+                err_msg = f"Pipeline execution failed on attempt {attempt}: {e}"
+                log.error(f"✗ {err_msg}")
+                run_stats["errors"].append(err_msg)
 
-    if not success:
-        log.error(f"✗ Pipeline failed to complete after {max_retries} attempts.")
+        # ── Wrap up ───────────────────────────────────────────────────────────
+        finish_time = datetime.now(timezone.utc)
+        elapsed = (finish_time - start_time).total_seconds()
+        run_stats["execution_time_seconds"] = elapsed
+        run_stats["finish_time_utc"] = _ts(finish_time)
+        run_stats["finish_time_ist"] = _ts(finish_time, IST)
+
+        # Save statistics JSON
+        save_run_log(run_stats)
+
+        # Write GitHub Summary
+        write_github_summary(run_stats)
+
+        # ── Completion banner ──────────────────────────────────────────────────
+        _banner(f"DONE — Run completed in {elapsed:.1f}s")
+        log.info(f"  Script Start  (UTC) : {_ts(start_time)}")
+        log.info(f"  Script Start  (IST) : {_ts(start_time, IST)}")
+        log.info(f"  Script Finish (UTC) : {_ts(finish_time)}")
+        log.info(f"  Script Finish (IST) : {_ts(finish_time, IST)}")
+        if run_stats.get("email_sent_time"):
+            log.info(f"  Email Sent    (UTC) : {run_stats['email_sent_time']}")
+        log.info(f"  Total Duration      : {elapsed:.1f}s")
+        log.info("─" * 60)
+
+        exit_code = 0 if success else 1
+        write_log_summary(run_stats, exit_code=exit_code)
+        sys.exit(exit_code)
+
+    except SystemExit as se:
+        raise se
+    except Exception as e:
+        err_msg = f"Unhandled exception: {e}"
+        log.exception(f"✗ {err_msg}")
+        run_stats["errors"].append(err_msg)
+        run_stats["email_status"] = "Failed (Unhandled Exception)"
+        run_stats["execution_time_seconds"] = (datetime.now(timezone.utc) - start_time).total_seconds()
+        save_run_log(run_stats)
+        write_log_summary(run_stats, exit_code=1)
         sys.exit(1)
 
 
