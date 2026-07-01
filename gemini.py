@@ -139,13 +139,14 @@ import threading
 
 gemini_lock = threading.Lock()
 last_call_time = 0.0
+cooldown_until = 0.0
 
 def _call_gemini(prompt: str, api_key: str, timeout: int = 30) -> dict | None:
     """
     Make a single Gemini API call. Returns parsed JSON dict or None on failure.
-    Includes thread-safe client-side rate limiting to stay under 15 RPM.
+    Includes thread-safe client-side rate limiting and coordinated cooldowns to stay under 15 RPM.
     """
-    global last_call_time
+    global last_call_time, cooldown_until
     url = f"{GEMINI_API_URL}?key={api_key}"
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
@@ -161,6 +162,14 @@ def _call_gemini(prompt: str, api_key: str, timeout: int = 30) -> dict | None:
 
         # We wrap the spacing logic and HTTP request inside the lock to enforce strict serialization
         with gemini_lock:
+            # 1. Coordinated cooldown check
+            now = time.time()
+            if now < cooldown_until:
+                sleep_needed = cooldown_until - now
+                log.info(f"Gemini API rate limit cooldown active. Sleeping for {sleep_needed:.1f} seconds...")
+                time.sleep(sleep_needed)
+
+            # 2. Minimum interval spacing
             now = time.time()
             elapsed = now - last_call_time
             if elapsed < 6.0:
@@ -179,10 +188,10 @@ def _call_gemini(prompt: str, api_key: str, timeout: int = 30) -> dict | None:
 
         # Handle retries and non-200 responses outside the lock so other threads are not blocked
         if status_code == 429:
-            import random
-            sleep_time = 15 + random.uniform(2.0, 6.0)
-            log.warning(f"Gemini API rate limited (429). Retrying in {sleep_time:.1f} seconds (attempt {attempt+1}/5)...")
-            time.sleep(sleep_time)
+            with gemini_lock:
+                cooldown_until = time.time() + 62.0
+            log.warning(f"Gemini API rate limited (429). Triggering 62-second cooldown... (attempt {attempt+1}/5)")
+            time.sleep(62.0)
             continue
         elif resp_err:
             log.warning(f"Gemini API call attempt {attempt+1} failed: {resp_err}")
