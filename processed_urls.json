@@ -331,7 +331,11 @@
     "7b41663e9e6b9f53603c3894e02e470fae7b64466fcb56dd3bc70e1ec3d43fc0",
     "1526b28a9c713c27665e8cf8642ad210ae8845d85a0aba208d8b1e9aeb3c047a",
     "1519f2bbb1ef4e3a190ac8ab16a2fab56364f3196aff3080050ad5e679f81a5f",
-    "f8d510e3b499d0ef1845619cd061b0df2ead0781f4eaf0ccc8e76c8f862f8204"
+    "f8d510e3b499d0ef1845619cd061b0df2ead0781f4eaf0ccc8e76c8f862f8204",
+    "e858bbfd4b73ff50d6b42374fbd04ddc7a71e8a3fd8c3eb5040f80ef3d9e734a",
+    "d59ab4079167a62640b61c3d16092351d6aac2687b0c76e2d785f023b7a8c2db",
+    "5a5b250e9e6ca11e5bc8f20fcc3c813e65d9a4eeb02d1383e5401268bbb42eb6",
+    "2782e36d4489ede18b18c4d4ed879dc4e36b1b1face20b850ef0f1acb5b1d6da"
   ],
   "title_hashes": [
     "6ff369fac364e6ae0a5f4130d379ff4f7cee1bc2fb263f03fc3d4a5f40a9055f",
@@ -664,10 +668,14 @@
     "c4269fc0e79a51e23876a6f12d0cb9726f10fdc8c14529841f09a4c2ea12b3aa",
     "d049062a92b750e62956fec8bd3e381b2018b1dacdafc76e3d12f0e33036c6c0",
     "062f0493bac122db80ee9eebd5fa497df698d327bea05f2ae6609ed45c13fde2",
-    "dd276bd374fd4836aa64e21d7fca202086d9f7f251bb0d067565019557db1e27"
+    "dd276bd374fd4836aa64e21d7fca202086d9f7f251bb0d067565019557db1e27",
+    "b4f1ba627e440cfdc7d393e531652e96eae897b16091e048c564092a88f1d883",
+    "46052c343fd50efee91af89f071b74376f31105a033829415dade29de59cee47",
+    "429d2f16d6f4ea029411e6efebc3ed2a043b116f00a4dbe23a7a6870956ded1f",
+    "fbdb09cb0b6270917437cb49ddc08d78da7c6d5d37c527edef006c02492db579"
   ],
-  "last_run": "2026-06-29T11:52:52.502289+00:00",
-  "total_processed": 331,
+  "last_run": "2026-07-01T10:34:15.365056+00:00",
+  "total_processed": 335,
   "runs": [
     {
       "date": "2026-06-24",
@@ -693,6 +701,11 @@
       "date": "2026-06-29",
       "articles_sent": 1,
       "new_urls_added": 1
+    },
+    {
+      "date": "2026-07-01",
+      "articles_sent": 4,
+      "new_urls_added": 4
     }
   ]
 }

@@ -135,10 +135,17 @@ def _validate_output(analysis: dict) -> tuple[bool, str]:
     return True, "OK"
 
 
+import threading
+
+gemini_lock = threading.Lock()
+last_call_time = 0.0
+
 def _call_gemini(prompt: str, api_key: str, timeout: int = 30) -> dict | None:
     """
     Make a single Gemini API call. Returns parsed JSON dict or None on failure.
+    Includes thread-safe client-side rate limiting to stay under 15 RPM.
     """
+    global last_call_time
     url = f"{GEMINI_API_URL}?key={api_key}"
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
@@ -149,11 +156,21 @@ def _call_gemini(prompt: str, api_key: str, timeout: int = 30) -> dict | None:
     headers = {"Content-Type": "application/json"}
 
     for attempt in range(3):
+        # Client-side rate limiting (max 14 requests per minute, spacing calls by >= 4.3 seconds)
+        with gemini_lock:
+            now = time.time()
+            elapsed = now - last_call_time
+            if elapsed < 4.3:
+                time.sleep(4.3 - elapsed)
+            last_call_time = time.time()
+
         try:
             resp = requests.post(url, json=payload, headers=headers, timeout=timeout)
             if resp.status_code == 429:
-                log.warning("Gemini API rate limited (429). Retrying in 5 seconds...")
-                time.sleep(5)
+                import random
+                sleep_time = 8 + random.uniform(1.0, 4.0)
+                log.warning(f"Gemini API rate limited (429). Retrying in {sleep_time:.1f} seconds...")
+                time.sleep(sleep_time)
                 continue
 
             resp.raise_for_status()
@@ -163,10 +180,10 @@ def _call_gemini(prompt: str, api_key: str, timeout: int = 30) -> dict | None:
 
         except json.JSONDecodeError as e:
             log.warning(f"Gemini JSON parse error on attempt {attempt+1}: {e}")
-            time.sleep(1.5)
+            time.sleep(2.0)
         except Exception as e:
             log.warning(f"Gemini API call attempt {attempt+1} failed: {e}")
-            time.sleep(1.5)
+            time.sleep(2.0)
 
     return None
 
